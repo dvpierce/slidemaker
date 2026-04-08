@@ -10,7 +10,7 @@ parser.add_argument("--height", help="Slide height, in inches", type=float, requ
 parser.add_argument("--input_dir", help="Path to files", type=str, required=False, default="./")
 parser.add_argument("--output_file", help="Name of output file (pptx)", type=str, required=False, default="Presentation.pptx")
 parser.add_argument("--duration", help="Duration for each slide.", type=float, required=False, default=5)
-parser.add_argument("--overwrite", help="Overwrite existing files?", type=bool, action="store_true")
+parser.add_argument("--overwrite", help="Overwrite existing files?", action="store_true")
 args = parser.parse_args()
 
 slide_w = args.width
@@ -38,7 +38,7 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
     prs.slide_height = Inches(slide_h)
 
     valid_extensions = ('.jpg', '.jpeg', 'png')
-    image_files = [f for f in os.listdir(input_dir) if f.lower().endswith(valid_extensons)]
+    image_files = [f for f in os.listdir(input_dir) if f.lower().endswith(valid_extensions)]
     image_files.sort()
 
     if (not image_files) or (len(image_files) == 0):
@@ -50,7 +50,7 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
         slide_layout = prs.slide_layouts[6]
         slide = prs.slides.add_slide(slide_layout)
         
-        img_path = os.path.join(image_folder, img_name)
+        img_path = os.path.join(input_dir, img_name)
         
         width, height = getlimits(img_path)
         xoffset, yoffset = get_offsets(width, height)
@@ -69,7 +69,7 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
             exit(f"{output_file} exists. Will not overwrite. Exiting.")
         else:
             if os.path.exists(output_file):
-                print(f"{output_file} exists. Overwriting per user instructions. (--overwrite selected.)")
+                print(f"Warning: {output_file} exists. (--overwrite selected.)")
             prs.save(output_file)
             print(f"Successfully created: {output_file}")
     except Exception as e:
