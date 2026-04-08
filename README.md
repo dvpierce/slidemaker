@@ -1,6 +1,6 @@
 ### Slidemaker
 
-Turn a folder of photos into powerpoint slides.
+Turn a folder of photos (JPEG or PNG) into PowerPoint slides.
 
 #### CLI arguments:
 
@@ -11,3 +11,6 @@ Turn a folder of photos into powerpoint slides.
 `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.
 `--overwrite`: Overwrite existing file if present.
 
+#### Truth Bomb
+
+Google AI wrote like half of this. So it's not really mine.

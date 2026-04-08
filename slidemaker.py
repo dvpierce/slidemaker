@@ -16,32 +16,36 @@ args = parser.parse_args()
 slide_w = args.width
 slide_h = args.height
 
+
 def getSize(image_file):
     w, h = Image.open(image_file).size
     return w, h
+
 
 def getlimits(image_file):
     w, h = getSize(image_file)
     scalefactor = max([(w/slide_w), (h/slide_h)])
     return (w/scalefactor), (h/scalefactor)
 
+
 def get_offsets(width, height):
     xoffset = (slide_w - width)/2
     yoffset = (slide_h - height)/2
     return xoffset, yoffset
 
+
 def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=5, overwrite=False):
     # Initialize presentation
     prs = Presentation()
-    
+
     prs.slide_width = Inches(slide_w)
     prs.slide_height = Inches(slide_h)
 
-    valid_extensions = ('.jpg', '.jpeg', 'png')
+    valid_extensions = ('.avif', '.bmp', '.gif', '.j2k', '.jp2', '.jpx', '.pcx', '.tiff', '.tif', '.jpg', '.jpeg', '.png', '.webp')
     image_files = [f for f in os.listdir(input_dir) if f.lower().endswith(valid_extensions)]
     image_files.sort()
 
-    if (not image_files) or (len(image_files) == 0):
+    if not image_files:
         print("No images found in the specified folder.")
         return
 
@@ -49,15 +53,15 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
         # Use a blank slide layout (index 6 is usually blank)
         slide_layout = prs.slide_layouts[6]
         slide = prs.slides.add_slide(slide_layout)
-        
+
         img_path = os.path.join(input_dir, img_name)
-        
+
         width, height = getlimits(img_path)
         xoffset, yoffset = get_offsets(width, height)
-        
+
         # Add and resize image to fit the 10x7.5 slide exactly
         slide.shapes.add_picture(img_path, Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
-        
+
         # Set timing: Access underlying XML to set 'Advance After' time
         # 'advTm' is in milliseconds
         slide_element = slide.element
@@ -76,5 +80,9 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
         print("Error writing output file.")
         raise e
 
+
 if __name__ == "__main__":
-    create_image_slideshow(input_dir=args.input_dir, output_file=args.output_file, slide_duration_sec=args.duration, overwrite=args.overwrite)
+    create_image_slideshow(input_dir=args.input_dir,
+                           output_file=args.output_file,
+                           slide_duration_sec=args.duration,
+                           overwrite=args.overwrite)
