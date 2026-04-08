@@ -1,6 +1,7 @@
 import os
 from pptx import Presentation
 from pptx.util import Inches
+from pptx.dml.color import RGBColor
 from PIL import Image
 import argparse
 
@@ -53,6 +54,8 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
         # Use a blank slide layout (index 6 is usually blank)
         slide_layout = prs.slide_layouts[6]
         slide = prs.slides.add_slide(slide_layout)
+        slide.background.fill.solid()
+        slide.background.fill.fore_color.rgb = RGBColor(0, 0, 0)
 
         img_path = os.path.join(input_dir, img_name)
 
