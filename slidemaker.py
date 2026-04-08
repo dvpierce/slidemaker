@@ -9,7 +9,8 @@ parser.add_argument("--width", help="Slide width, in inches", type=float, requir
 parser.add_argument("--height", help="Slide height, in inches", type=float, required=False, default=7.5)
 parser.add_argument("--input_dir", help="Path to files", type=str, required=False, default="./")
 parser.add_argument("--output_file", help="Name of output file (pptx)", type=str, required=False, default="Presentation.pptx")
-parser.add_argument("--duration", help="Duration for each slide.", type=float, required=False, default=5) 
+parser.add_argument("--duration", help="Duration for each slide.", type=float, required=False, default=5)
+parser.add_argument("--overwrite", help="Overwrite existing files?", type=bool, action="store_true")
 args = parser.parse_args()
 
 slide_w = args.width
@@ -29,7 +30,7 @@ def get_offsets(width, height):
     yoffset = (slide_h - height)/2
     return xoffset, yoffset
 
-def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=5):
+def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=5, overwrite=False):
     # Initialize presentation
     prs = Presentation()
     
@@ -64,11 +65,16 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
         slide_element.set('advTm', str(slide_duration_sec * 1000))
 
     try:
-        prs.save(output_file)
-        print(f"Successfully created: {output_file}")
+        if os.path.exists(output_file) and (not overwrite):
+            exit(f"{output_file} exists. Will not overwrite. Exiting.")
+        else:
+            if os.path.exists(output_file):
+                print(f"{output_file} exists. Overwriting per user instructions. (--overwrite selected.)")
+            prs.save(output_file)
+            print(f"Successfully created: {output_file}")
     except Exception as e:
         print("Error writing output file.")
         raise e
 
 if __name__ == "__main__":
-    create_image_slideshow(input_dir=args.input_dir, output_file=args.output_file, slide_duration_sec=args.duration)
+    create_image_slideshow(input_dir=args.input_dir, output_file=args.output_file, slide_duration_sec=args.duration, overwrite=args.overwrite)
