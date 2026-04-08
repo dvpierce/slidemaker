@@ -4,6 +4,7 @@ from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from PIL import Image
 import argparse
+import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--width", help="Slide width, in inches", type=float, required=False, default=13.333)
@@ -12,6 +13,7 @@ parser.add_argument("--input_dir", help="Path to files", type=str, required=Fals
 parser.add_argument("--output_file", help="Name of output file (pptx)", type=str, required=False, default="Presentation.pptx")
 parser.add_argument("--duration", help="Duration for each slide.", type=float, required=False, default=5)
 parser.add_argument("--overwrite", help="Overwrite existing files?", action="store_true")
+parser.add_argument("--bgcolor", help="RGB code for background color. Default is black.", required=False, default="000000")
 args = parser.parse_args()
 
 slide_w = args.width
@@ -35,7 +37,25 @@ def get_offsets(width, height):
     return xoffset, yoffset
 
 
-def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=5, overwrite=False):
+def getRGB(hexstring):
+    pattern = r'^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
+    if not bool(re.match(pattern, hexstring)):
+        raise Exception(f"{hexstring} is not a valid RGB color code.")
+    hexstring = hexstring.replace("#", "").lower()
+    if len(hexstring) == 3:
+        r = int(hexstring[0]+hexstring[0], 16)
+        g = int(hexstring[1]+hexstring[1], 16)
+        b = int(hexstring[2]+hexstring[2], 16)
+    elif len(hexstring) == 6:
+        r = int(hexstring[0:2], 16)
+        g = int(hexstring[2:4], 16)
+        b = int(hexstring[4:6], 16)
+    else:
+        raise Exception(f"{hexstring} is not a valid RGB color code.")
+    return RGBColor(r, g, b)
+
+
+def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=5, overwrite=False, bgcolor="000000"):
     # Initialize presentation
     prs = Presentation()
 
@@ -55,7 +75,7 @@ def create_image_slideshow(input_dir=None, output_file=None, slide_duration_sec=
         slide_layout = prs.slide_layouts[6]
         slide = prs.slides.add_slide(slide_layout)
         slide.background.fill.solid()
-        slide.background.fill.fore_color.rgb = RGBColor(0, 0, 0)
+        slide.background.fill.fore_color.rgb = getRGB(bgcolor)
 
         img_path = os.path.join(input_dir, img_name)
 
@@ -88,4 +108,5 @@ if __name__ == "__main__":
     create_image_slideshow(input_dir=args.input_dir,
                            output_file=args.output_file,
                            slide_duration_sec=args.duration,
-                           overwrite=args.overwrite)
+                           overwrite=args.overwrite,
+                           bgcolor=args.bgcolor)
