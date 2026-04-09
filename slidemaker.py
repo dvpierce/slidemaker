@@ -1,8 +1,9 @@
 import os
+import io
 from pptx import Presentation
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
-from PIL import Image
+from PIL import Image, ImageFilter
 import numpy as np
 import argparse
 import re
@@ -16,6 +17,7 @@ parser.add_argument("--duration", help="Duration for each slide.", type=float, r
 parser.add_argument("--overwrite", help="Overwrite existing files?", action="store_true")
 parser.add_argument("--bgcolor", help="RGB code for background color. Default is black.", required=False, default="000000")
 parser.add_argument("--threshold", help="Hamming distance for duplicate detection. Default is 12. Smaller numbers are less likely to detect duplicates, larger numbers are more likely to get false positives.", required=False, type=int, default=12)
+parser.add_argument("--blurry_background", help="Blurry Youtube style background.", action="store_true")
 args = parser.parse_args()
 
 slide_w = args.width
@@ -129,12 +131,24 @@ def find_dupes(image_files, duplicate_threshold=12):
     return
 
 
+def blur_stretch(image_path, width, height):
+    original = Image.open(image_path)
+    stretched = original.resize((width, height))
+
+    blurred_bg = stretched.filter(ImageFilter.GaussianBlur(radius=20))
+    image_stream = io.BytesIO()
+    blurred_bg.save(image_stream, format='PNG')
+    image_stream.seek(0)
+    return image_stream
+
+
 def create_image_slideshow(input_dir=None,
                            output_file=None,
                            slide_duration_sec=5,
                            overwrite=False,
                            bgcolor="000000",
-                           duplicate_threshold=12):
+                           duplicate_threshold=12,
+                           blurbg=None):
     # Initialize presentation
     prs = Presentation()
 
@@ -166,12 +180,14 @@ def create_image_slideshow(input_dir=None,
         slide_layout = prs.slide_layouts[6]
         slide = prs.slides.add_slide(slide_layout)
         slide.background.fill.solid()
-        slide.background.fill.fore_color.rgb = getRGB(bgcolor)
 
         width, height = getlimits(img_path)
-        xoffset, yoffset = get_offsets(width, height)
+        xoffset, yoffset = get_offsets(slide_w, slide_h)
 
-        # Add and resize image to fit the 10x7.5 slide exactly
+        if blurbg:
+            slide.shapes.add_picture(blur_stretch(img_path, int(width*100), int(height*100)), 0, 0, width=Inches(slide_w), height=Inches(slide_h))
+        else:
+            slide.background.fill.fore_color.rgb = getRGB(bgcolor)
         slide.shapes.add_picture(img_path, Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
 
         # Set timing: Access underlying XML to set 'Advance After' time
@@ -201,4 +217,5 @@ if __name__ == "__main__":
                            slide_duration_sec=args.duration,
                            overwrite=args.overwrite,
                            bgcolor=args.bgcolor,
-                           duplicate_threshold=args.threshold)
+                           duplicate_threshold=args.threshold,
+                           blurbg=args.blurry_background)
