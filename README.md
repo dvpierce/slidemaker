@@ -30,6 +30,7 @@ Generally speaking, you're almost never going to see anything but 16:9 on a comp
   &ensp;&ensp;&ensp;&ensp;- The image type needs to be [supported by Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html).  
 
   `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.  
+  `--transition`: Select transition type. 0 = none, 1 = fade, 2 = wipe, 3 = push, 4 = ripple.  
   `--bgcolor`: Background color (in RGB hex) for the slides. Default is "000000" (white).
   `--blurry_background`: Instead of using the bgcolor, the script will insert a stretched and heavily blurred version of the image behind itself.  
   &ensp;&ensp;&ensp;&ensp;- This will significantly increase file size.  
