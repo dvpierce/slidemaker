@@ -20,13 +20,13 @@ Default slide size is PowerPoint's default of 13.333 by 7.5 inches, with a 16:9 
 
 Generally speaking, you're almost never going to see anything but 16:9 on a computer. But some places still have the older 4:3 stuff kicking around.
 
-#### Use
+#### How To Use
 
 ```
 python slidemaker.py --input_dir imgs --deduplicate --transition 2 --blurry_background
 ```
 
-#### CLI arguments:
+#### CLI Arguments
 
   `--width`: Width for slides. Default: 13.333".  
   `--height`: Height for slides. Default: 7.5".  
@@ -64,6 +64,6 @@ The Hamming Distance (named after [Richard Hamming](https://en.wikipedia.org/wik
   * Small changes, like retouching to remove red-eye or a pimple, or slight cropping to remove fuzzies or background from a scanned image, will also not have much effect.
   * With enough editing, or with pictures that are just not the same, the number will be pretty large.
 
-This is great for filtering duplicates out of a large library of scanned photos. Because when your grandpa dropped that box of slides off at Walgreens in 1997, they didn't pick out the duplicates either, and now you have four CD-Rs with six slightly different high resolution scans of your dad on prom night in a powder blue tuxedo and a mullet.
+This is great for filtering duplicates out of a large library of scanned photos. Because when your grandpa dropped that box of slides off at Walgreens in 1997, they didn't pick out the duplicates either, and now you have twelve CD-Rs with six slightly different high resolution scans of the same photo of your dad on prom night, May 1976, in a powder blue tuxedo and a mullet.
 
 So, for my sets of family photos, I've found that a threshold of 14 was sufficient to find basically all of the duplicates. Higher than 20, and I started getting false positives. Your mileage may vary.
