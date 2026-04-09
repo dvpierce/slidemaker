@@ -182,10 +182,10 @@ def create_image_slideshow(input_dir=None,
         slide.background.fill.solid()
 
         width, height = getlimits(img_path)
-        xoffset, yoffset = get_offsets(slide_w, slide_h)
+        xoffset, yoffset = get_offsets(width, height)
 
         if blurbg:
-            slide.shapes.add_picture(blur_stretch(img_path, int(width*100), int(height*100)), 0, 0, width=Inches(slide_w), height=Inches(slide_h))
+            slide.shapes.add_picture(blur_stretch(img_path, int(slide_w*100), int(slide_h*100)), 0, 0, width=Inches(slide_w), height=Inches(slide_h))
         else:
             slide.background.fill.fore_color.rgb = getRGB(bgcolor)
         slide.shapes.add_picture(img_path, Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
