@@ -2,11 +2,61 @@ import os
 from pptx import Presentation
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
+from pptx.oxml import parse_xml
 
 from lib.helpers import dedup, imghandler
 
 class slideshow:
+    no_transition = """<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
+      <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" p14:dur="0" advClick="0" advTm="{timedelay}"/>
+    </mc:Choice>
+    <mc:Fallback>
+      <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" advClick="0" advTm="{timedelay}"/>
+    </mc:Fallback>
+  </mc:AlternateContent>"""
+    
+    fade_transition = """<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
+      <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="med" p14:dur="700" advClick="0" advTm="{timedelay}">
+        <p:fade/>
+      </p:transition>
+    </mc:Choice>
+    <mc:Fallback>
+      <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="med" advClick="0" advTm="{timedelay}">
+        <p:fade/>
+      </p:transition>
+    </mc:Fallback>
+  </mc:AlternateContent>
+"""
+
+    wipe_transition = """<p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" advClick="0" advTm="{timedelay}">
+        <p:wipe/>
+    </p:transition>"""
+    
+    push_transition = """<p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" advClick="0" advTm="{timedelay}">
+        <p:push dir="u"/>
+    </p:transition>"""
+    
+    ripple_transition = """<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+    <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
+        <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" p14:dur="1400" advClick="0" advTm="{timedelay}">
+            <p14:ripple/>
+        </p:transition>
+    </mc:Choice>
+    <mc:Fallback>
+        <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" advClick="0" advTm="{timedelay}">
+            <p:fade/>
+        </p:transition>
+    </mc:Fallback>
+</mc:AlternateContent>"""
+    
     do_output = True
+    
+    transitions = [
+        {"name": "fade", "duration": 700},
+        {"name": "ripple", "duration": 2000},
+    ]
 
     def __init__(self):
         return
@@ -19,6 +69,7 @@ class slideshow:
     @classmethod
     def create_image_slideshow(cls, input_dir=None, output_file=None, overwrite=False,
                                slide_w=13.333, slide_h=7.5,
+                               transition=0,
                                bgcolor="000000", slide_duration_sec=5, blurbg=None,
                                deduplicate=False, duplicate_threshold=12):
         prs = Presentation()
@@ -56,10 +107,21 @@ class slideshow:
             # Insert image on slide.
             slide.shapes.add_picture(img_path, Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
 
-            # This is supposed to set the slides to autoadvance after slide_duration_sec seconds, but it doesn't work. I'll have to figure out why at some point.
-            slide_element = slide.element
-            slide_element.set('advClick', '0')  # Don't wait for click
-            slide_element.set('advTm', str(slide_duration_sec * 1000))
+            # Add slide transition (or no transition.)
+            if transition == 1:
+                transition = cls.fade_transition
+            elif transition == 2:
+                transition = cls.wipe_transition
+            elif transition == 3:
+                transition = cls.push_transition
+            elif transition == 4:
+                transition = cls.ripple_transition
+            else:
+                transition = cls.no_transition
+
+            xml = transition.format(timedelay = str(slide_duration_sec * 1000))
+            fragment = parse_xml(xml)
+            slide.element.insert(-1, fragment)
 
         cls.output("")
         cls.output(f"Saving {output_file}...")

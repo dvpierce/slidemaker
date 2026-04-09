@@ -16,6 +16,7 @@ parser.add_argument("--threshold", help="Hamming distance for duplicate detectio
 parser.add_argument("--blurry_background", help="Blurry Youtube style background.", action="store_true")
 parser.add_argument("--deduplicate", help="Enable duplicate detection and don't include duplicates.", action="store_true")
 parser.add_argument("--add_format", help="Force a specific file extension.", required=False, type=str)
+parser.add_argument("--transition", help="Transition type", required=False, type=int, default=0)
 args = parser.parse_args()
 
 
@@ -29,4 +30,5 @@ if __name__ == "__main__":
                            bgcolor=args.bgcolor,
                            duplicate_threshold=args.threshold,
                            blurbg=args.blurry_background,
-                           deduplicate=args.deduplicate)
+                           deduplicate=args.deduplicate,
+                           transition=args.transition)
