@@ -26,3 +26,5 @@
 **/*.jpeg
 **/*.png
 **/*.webp
+__pycache__/**
+**/__pycache__
