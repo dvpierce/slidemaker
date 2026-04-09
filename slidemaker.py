@@ -11,7 +11,7 @@ parser.add_argument("--input_dir", help="Path to files", type=str, required=Fals
 parser.add_argument("--output_file", help="Name of output file (pptx)", type=str, required=False, default="Presentation.pptx")
 parser.add_argument("--duration", help="Duration for each slide.", type=float, required=False, default=5)
 parser.add_argument("--overwrite", help="Overwrite existing files?", action="store_true")
-parser.add_argument("--bgcolor", help="RGB code for background color. Default is black.", required=False, default="000000")
+parser.add_argument("--bgcolor", help="RGB code for background color. Default is white.", required=False, default="ffffff")
 parser.add_argument("--threshold", help="Hamming distance for duplicate detection. Default is 12. Smaller numbers are less likely to detect duplicates, larger numbers are more likely to get false positives.", required=False, type=int, default=12)
 parser.add_argument("--blurry_background", help="Blurry Youtube style background.", action="store_true")
 parser.add_argument("--deduplicate", help="Enable duplicate detection and don't include duplicates.", action="store_true")

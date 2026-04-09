@@ -99,7 +99,7 @@ class slideshow:
 
             # Insert background on slide.
             if blurbg:
-                slide.shapes.add_picture(blur_stretch(img_path, int(slide_w*100), int(slide_h*100)), 0, 0, width=Inches(slide_w), height=Inches(slide_h))
+                slide.shapes.add_picture(i.blur_stretch(), 0, 0, width=Inches(slide_w), height=Inches(slide_h))
             else:
                 r, g, b = imghandler.convert_RGB(bgcolor)
                 slide.background.fill.fore_color.rgb = RGBColor(r, g, b)

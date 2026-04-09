@@ -26,8 +26,8 @@ class imghandler:
         return xoffset, yoffset
 
     def blur_stretch(self):
-        original = Image.open(self.image_path)
-        stretched = original.resize((width, height))
+        original = Image.open(self.image)
+        stretched = original.resize((int(self.slide_w*100), int(self.slide_h*100)))
         blurred_bg = stretched.filter(ImageFilter.GaussianBlur(radius=20))
         image_stream = io.BytesIO()
         blurred_bg.save(image_stream, format='PNG')
