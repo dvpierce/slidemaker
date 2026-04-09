@@ -18,6 +18,8 @@ parser.add_argument("--overwrite", help="Overwrite existing files?", action="sto
 parser.add_argument("--bgcolor", help="RGB code for background color. Default is black.", required=False, default="000000")
 parser.add_argument("--threshold", help="Hamming distance for duplicate detection. Default is 12. Smaller numbers are less likely to detect duplicates, larger numbers are more likely to get false positives.", required=False, type=int, default=12)
 parser.add_argument("--blurry_background", help="Blurry Youtube style background.", action="store_true")
+parser.add_argument("--limit", help="Only make this many slides.", type=int, required=False)
+parser.add_argument("--nodupe", help="Disable duplicate detection.", action="store_true")
 args = parser.parse_args()
 
 slide_w = args.width
@@ -148,7 +150,9 @@ def create_image_slideshow(input_dir=None,
                            overwrite=False,
                            bgcolor="000000",
                            duplicate_threshold=12,
-                           blurbg=None):
+                           blurbg=None,
+                           limit=None,
+                           nodupe=None):
     # Initialize presentation
     prs = Presentation()
 
@@ -164,12 +168,13 @@ def create_image_slideshow(input_dir=None,
         print("No images found in the specified folder.")
         return
 
-    find_dupes(image_files, duplicate_threshold=duplicate_threshold)
+    if not nodupe:
+        find_dupes(image_files, duplicate_threshold=duplicate_threshold)
 
-    proceed = input("Would you like to proceed with creating the slideshow? [y/n]: ")
-    if proceed.lower() not in ("y", "yes", "ok", "yup", "sure"):
-        print("User cancelled.")
-        return
+        proceed = input("Would you like to proceed with creating the slideshow? [y/n]: ")
+        if proceed.lower() not in ("y", "yes", "ok", "yup", "sure"):
+            print("User cancelled.")
+            return
 
     count = 0
     for img_path in image_files:
@@ -190,11 +195,14 @@ def create_image_slideshow(input_dir=None,
             slide.background.fill.fore_color.rgb = getRGB(bgcolor)
         slide.shapes.add_picture(img_path, Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
 
-        # Set timing: Access underlying XML to set 'Advance After' time
-        # 'advTm' is in milliseconds
+        # This is supposed to set the slides to autoadvance after slide_duration_sec seconds, but it doesn't work. I'll have to figure out why at some point.
         slide_element = slide.element
         slide_element.set('advClick', '0')  # Don't wait for click
         slide_element.set('advTm', str(slide_duration_sec * 1000))
+
+        if limit:
+            if count >= limit:
+                break
 
     print("")
     print(f"Saving {output_file}...")
@@ -218,4 +226,6 @@ if __name__ == "__main__":
                            overwrite=args.overwrite,
                            bgcolor=args.bgcolor,
                            duplicate_threshold=args.threshold,
-                           blurbg=args.blurry_background)
+                           blurbg=args.blurry_background,
+                           limit=args.limit,
+                           nodupe=args.nodupe)
