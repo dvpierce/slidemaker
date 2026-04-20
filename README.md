@@ -18,14 +18,18 @@ Default slide size is PowerPoint's default of 13.333 by 7.5 inches, with a 16:9 
 
 Generally speaking, you're almost never going to see anything but 16:9 on a computer. But some places still have the older 4:3 stuff kicking around.
 
-Also, even if you have a newer projector, you might have an older screen which is squareish. Setting the projector to a 4:3 or 5:4 aspect ratio might be preferable in that case as well, if it supports the older video modes.
+Also, even if you have a newer projector, you might have an older screen which is squareish. Setting the projector to a 4:3 or 5:4 aspect ratio might be preferable in that case as well, if the hardware supports the older video modes.
 
-**A Note About File Size**: Pictures are not individually all that large, although what a "normal" photo take up increases every time somebody oupgrades their smartphone. But they add up. If you have a gigabyte of photographs, you're probably going to end up with a gigabyte of powerpoint presentation. Buy big thumb drives.
+**A Note About File Size**: Pictures are not individually all that large, although the storage a normal photo uses increases every time somebody upgrades their smartphone. But whether they're 12MB each or 2MB, it can add up fast. Especially if your grandmother was, like mine, always carrying around a camera. So keep in mind that a GB of photographs will end up being a GB of presentation, and buy big thumb drives.
 
 #### How To Use
 
 ```
-python slidemaker.py --input_dir imgs --deduplicate --transition 2 --blurry_background
+# Make a slideshow from the images in the "imgs" directory
+# with blurred image backgrounds and wipe transitions.
+# Remove duplicates.
+
+python slidemaker.py --input_dir ./imgs --deduplicate --transition 2 --blurry_background
 ```
 
 #### CLI Arguments
