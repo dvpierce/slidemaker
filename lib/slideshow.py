@@ -5,6 +5,7 @@ from pptx.dml.color import RGBColor
 from pptx.oxml import parse_xml
 
 from lib.helpers import dedup, imghandler
+import datetime
 
 class slideshow:
     no_transition = """<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
@@ -51,7 +52,8 @@ class slideshow:
     </mc:Fallback>
 </mc:AlternateContent>"""
     
-    do_output = True
+    stdout_output = True
+    logfile_name = "slideshowmaker.log"
     
     transitions = [
         {"name": "fade", "duration": 700},
@@ -63,8 +65,13 @@ class slideshow:
 
     @classmethod
     def output(cls, *args, **kwargs):
-        if cls.do_output:
-            print(*args, **kwargs)
+        def get_time():
+            return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))
+        if cls.stdout_output:
+            print(get_time(), *args, **kwargs)
+        else:
+            with open(cls.logfile_name, "a") as f:
+                print(get_time(), *args, **kwargs, file=f)
 
     @classmethod
     def create_image_slideshow(cls, input_dir=None, output_file=None, overwrite=False,
@@ -72,6 +79,10 @@ class slideshow:
                                transition="none", auto_contrast=False,
                                bgcolor="ffffff", slide_duration_sec=5, blurbg=None,
                                deduplicate=False, duplicate_threshold=12):
+
+        if os.path.exists(output_file) and not overwrite:
+            raise FileExistsError(f"{output_file} already exists. Not set to overwrite.")
+
         prs = Presentation()
         prs.slide_width = Inches(slide_w)
         prs.slide_height = Inches(slide_h)
@@ -127,10 +138,8 @@ class slideshow:
 
         cls.output("")
         cls.output(f"Saving {output_file}...")
-        if os.path.exists(output_file) and (not overwrite):
-            exit(f"{output_file} exists. Can't overwrite. Exiting.")
-        else:
-            if os.path.exists(output_file):
-                cls.output(f"Warning: {output_file} exists and will be overwritten. (--overwrite enabled.)")
-            prs.save(output_file)
-            cls.output(f"Successfully created: {output_file}")
+        if os.path.exists(output_file):
+            cls.output(f"Warning: {output_file} exists and will be overwritten. (--overwrite enabled.)")
+        prs.save(output_file)
+        cls.output(f"Successfully created: {output_file}")
+        return True

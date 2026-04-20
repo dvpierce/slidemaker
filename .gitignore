@@ -26,7 +26,11 @@
 **/*.jpeg
 **/*.png
 **/*.webp
+
 __pycache__/**
 **/__pycache__
+
 file_database
 **/file_database
+*.log
+**/*.log

@@ -70,6 +70,7 @@ args = parser.parse_args()
 
 
 if __name__ == "__main__":
+    slideshow.stdout_output = False
     slideshow.create_image_slideshow(input_dir=args.input_dir,
                            output_file=args.output_file,
                            slide_w=args.width,
