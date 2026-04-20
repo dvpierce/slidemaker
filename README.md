@@ -38,17 +38,15 @@ python slidemaker.py --input_dir imgs --deduplicate --transition 2 --blurry_back
   &ensp;&ensp;&ensp;&ensp;- The image type still needs to be [supported by Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html).  
 
   `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.  
-  `--transition`: Select transition type. 0 = none, 1 = fade, 2 = wipe, 3 = push, 4 = ripple.  
-  `--bgcolor`: Background color (in RGB hex) for the slides. Default is "FFFFFF" (white). 3-character shorthand (#FFF) is supported.
+  `--transition`: Select transition type. [none|fade|wipe|push|ripple].  
+  `--bgcolor`: Background color (in RGB hex) for the slides. Default is "#FFFFFF" (white). 3-character shorthand (#FFF) is supported. Case insensitive. '#' is optional.
+  
   `--blurry_background`: Instead of using the bgcolor, the script will insert a stretched and heavily blurred version of the image behind itself.  
   &ensp;&ensp;&ensp;&ensp;- This will significantly increase file size, since there are now two copies of all the pictures instead of one.  
+  `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
 
-  `--deduplicate`: Find and omit similar-looking images based on similarity threshold.  
+  `--deduplicate`: Find and omit similar-looking images based on similarity threshold. This will also save a JSON full of duplicate image info.  
   `--threshold`: Minimum "Hamming Distance" between two photos for duplicate detection. (Does nothing unless --deduplicate is also set, defaults to 12.)
-
-#### Truth Bomb
-
-Google AI wrote like half of this. And then I had to rewrite basically all of it. But somehow I still feel guilty.
 
 #### Deduplicating and the Hamming Distance
 
