@@ -71,6 +71,7 @@ class slideshow:
             print(get_time(), *args, **kwargs)
         else:
             with open(cls.logfile_name, "a") as f:
+                value = kwargs.pop('end', None)
                 print(get_time(), *args, **kwargs, file=f)
 
     @classmethod
@@ -78,7 +79,10 @@ class slideshow:
                                slide_w=13.333, slide_h=7.5,
                                transition="none", auto_contrast=False,
                                bgcolor="ffffff", slide_duration_sec=5, blurbg=None,
-                               deduplicate=False, duplicate_threshold=12):
+                               deduplicate=False, duplicate_threshold=12, resample=0,
+                               logfile=False):
+                                   
+        cls.stdout_output = not logfile
 
         if os.path.exists(output_file) and not overwrite:
             raise FileExistsError(f"{output_file} already exists. Not set to overwrite.")
@@ -89,6 +93,7 @@ class slideshow:
 
         if deduplicate:
             deduper = dedup(directory=input_dir, hash_size=8, hamming_diff=duplicate_threshold, do_output=True)
+            deduper.do_output = cls.stdout_output
             image_files = deduper.get_deduplicated_file_list()
         else:
             image_files = [f"{input_dir}{os.sep}{file}" for file in os.listdir(input_dir)]
@@ -114,6 +119,12 @@ class slideshow:
             else:
                 r, g, b = imghandler.convert_RGB(bgcolor)
                 slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
+
+            if resample != 0:
+                if i.resample(maxres=resample):
+                    cls.output(f"Image {i.image} resized.")
+                else:
+                    cls.output(f"Image {i.image} not resized - already small enough.")
 
             if auto_contrast:
                 slide.shapes.add_picture(i.get_autocontrast(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))

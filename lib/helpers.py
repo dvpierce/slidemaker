@@ -4,6 +4,7 @@ from PIL import Image, ImageFilter, ImageOps
 import numpy as np
 import re
 import json
+import datetime
 
 class imghandler:
     def __init__(self, img_path, slide_w=13.333, slide_h=7.5):
@@ -11,15 +12,39 @@ class imghandler:
         self.slide_w = slide_w
         self.slide_h = slide_h
         self.image_data = Image.open(self.image)
+        self.lim_w = None
+        self.lim_h = None
 
     def get_imagesize(self):
         w, h = self.image_data.size
         return w, h
 
     def get_limits(self):
-        w, h = self.get_imagesize()
-        scalefactor = max([(w/self.slide_w), (h/self.slide_h)])
-        return (w/scalefactor), (h/scalefactor)
+        # Compute (once, and save) the maximum image size in inches.
+        if not self.lim_w and not self.lim_h:
+            w, h = self.get_imagesize()
+            scalefactor = max([(w/self.slide_w), (h/self.slide_h)])
+            self.lim_w = w/scalefactor
+            self.lim_h = h/scalefactor
+        return self.lim_w, self.lim_h
+
+    def get_is_largeimage(self, maxres=300):
+        # Return whether or not the image is higher res than it needs
+        # to be in order to be [maxres] DPI @ get_limits() height/width.
+        w, h = self.image_data.size
+        lim_w, lim_h = self.get_limits()
+        return w > (lim_w * maxres)
+
+    def resample(self, maxres=300):
+        # Resample image to [maxres] dpi if it's higher res than needed.
+        if self.get_is_largeimage():
+            lim_w, lim_h = self.get_limits()
+            new_w = int(lim_w * maxres)
+            new_h = int(lim_h * maxres)
+            self.image_data = self.image_data.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
+            return True
+        else:
+            return False
 
     def get_offsets(self):
         iw, ih = self.get_limits()
@@ -77,10 +102,17 @@ class dedup:
         self.do_output = do_output
         self.ddlist = None
         self.force = forcetype
-
+        self.logfile_name = "slideshowmaker.log"
+    
     def output(self, *args, **kwargs):
+        def get_time():
+            return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))
         if self.do_output:
-            print(*args, **kwargs)
+            print(get_time(), *args, **kwargs)
+        else:
+            with open(self.logfile_name, "a") as f:
+                value = kwargs.pop('end', None)
+                print(get_time(), *args, **kwargs, file=f)
 
     def toggle_stdoutput(self):
         self.do_output = not self.do_output

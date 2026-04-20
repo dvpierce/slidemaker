@@ -66,11 +66,20 @@ parser.add_argument("-a", "--auto_contrast",
                     help="Whether to apply auto-contrast to images.",
                     required=False,
                     action="store_true")
+parser.add_argument("-s", "--resample",
+                    help="Resample large images to [DPI] to save disk space. Set to '0' or omit to disable resampling.",
+                    required=False,
+                    type=int,
+                    default=0)
+parser.add_argument("-l", "--logfile",
+                    help="Save output to log instead.",
+                    required=False,
+                    action="store_true")
 args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    slideshow.stdout_output = False
+    # slideshow.stdout_output = False
     slideshow.create_image_slideshow(input_dir=args.input_dir,
                            output_file=args.output_file,
                            slide_w=args.width,
@@ -82,4 +91,6 @@ if __name__ == "__main__":
                            blurbg=args.blurry_background,
                            deduplicate=args.deduplicate,
                            transition=args.transition,
-                           auto_contrast=args.auto_contrast)
+                           auto_contrast=args.auto_contrast,
+                           resample=args.resample,
+                           logfile=args.logfile)
