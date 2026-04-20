@@ -3,20 +3,69 @@ import io
 import argparse
 
 from lib.slideshow import slideshow
+from lib.validators import validators as v
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--width", help="Slide width, in inches", type=float, required=False, default=13.333)
-parser.add_argument("--height", help="Slide height, in inches", type=float, required=False, default=7.5)
-parser.add_argument("--input_dir", help="Path to files", type=str, required=False, default="./")
-parser.add_argument("--output_file", help="Name of output file (pptx)", type=str, required=False, default="Presentation.pptx")
-parser.add_argument("--duration", help="Duration for each slide.", type=float, required=False, default=5)
-parser.add_argument("--overwrite", help="Overwrite existing files?", action="store_true")
-parser.add_argument("--bgcolor", help="RGB code for background color. Default is white.", required=False, default="ffffff")
-parser.add_argument("--threshold", help="Hamming distance for duplicate detection. Default is 12. Smaller numbers are less likely to detect duplicates, larger numbers are more likely to get false positives.", required=False, type=int, default=12)
-parser.add_argument("--blurry_background", help="Blurry Youtube style background.", action="store_true")
-parser.add_argument("--deduplicate", help="Enable duplicate detection and don't include duplicates.", action="store_true")
-parser.add_argument("--add_format", help="Force a specific file extension.", required=False, type=str)
-parser.add_argument("--transition", help="Transition type", required=False, type=int, default=0)
+parser.add_argument("-w", "--width", 
+                    help="Slide width, in inches",
+                    type=float,
+                    required=False,
+                    default=13.333)
+parser.add_argument("-v", "--height",
+                    help="Slide height, in inches", 
+                    type=float,
+                    required=False,
+                    default=7.5)
+parser.add_argument("-i", "--input_dir",
+                    help="Path to files",
+                    type=v.validate_is_dir,
+                    required=False,
+                    default="./")
+parser.add_argument("-o", "--output_file",
+                    help="Name of output file (pptx)",
+                    type=str,
+                    required=False,
+                    default="Presentation.pptx")
+parser.add_argument("-d", "--duration",
+                    help="Duration for each slide.",
+                    type=float,
+                    required=False,
+                    default=5)
+parser.add_argument("-r", "--overwrite",
+                    help="Overwrite existing files?",
+                    action="store_true")
+parser.add_argument("-c", "--bgcolor",
+                    help="RGB code for background color. Default is white.",
+                    type=v.validate_is_hex,
+                    required=False,
+                    default="ffffff")
+parser.add_argument("-k", "--threshold",
+                    help="Hamming distance for duplicate detection. Default is 12. " +
+                    "Smaller numbers are less likely to detect duplicates, larger " +
+                    "numbers are more likely to get false positives.",
+                    required=False,
+                    type=int,
+                    default=12)
+parser.add_argument("-b", "--blurry_background",
+                    help="Blurry Youtube style background.",
+                    action="store_true")
+parser.add_argument("-e", "--deduplicate",
+                    help="Enable duplicate detection and don't include duplicates.",
+                    action="store_true")
+parser.add_argument("-f", "--add_format",
+                    help="Force a specific file extension.",
+                    required=False,
+                    type=v.validate_is_pilsupported)
+parser.add_argument("-t", "--transition",
+                    help="Transition type: supports fade, wipe, push, or ripple. Omit for no transition or enter 'none'.",
+                    required=False,
+                    choices=["fade", "wipe", "push", "ripple", "none"], 
+                    type=str,
+                    default="none")
+parser.add_argument("-a", "--auto_contrast",
+                    help="Whether to apply auto-contrast to images.",
+                    required=False,
+                    action="store_true")
 args = parser.parse_args()
 
 
@@ -31,4 +80,5 @@ if __name__ == "__main__":
                            duplicate_threshold=args.threshold,
                            blurbg=args.blurry_background,
                            deduplicate=args.deduplicate,
-                           transition=args.transition)
+                           transition=args.transition,
+                           auto_contrast=args.auto_contrast)

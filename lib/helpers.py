@@ -1,17 +1,19 @@
 import os
 import io
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 import numpy as np
 import re
+import json
 
 class imghandler:
     def __init__(self, img_path, slide_w=13.333, slide_h=7.5):
         self.image = img_path
         self.slide_w = slide_w
         self.slide_h = slide_h
+        self.image_data = Image.open(self.image)
 
     def get_imagesize(self):
-        w, h = Image.open(self.image).size
+        w, h = self.image_data.size
         return w, h
 
     def get_limits(self):
@@ -26,11 +28,24 @@ class imghandler:
         return xoffset, yoffset
 
     def blur_stretch(self):
-        original = Image.open(self.image)
+        original = self.image_data
         stretched = original.resize((int(self.slide_w*100), int(self.slide_h*100)))
         blurred_bg = stretched.filter(ImageFilter.GaussianBlur(radius=20))
         image_stream = io.BytesIO()
         blurred_bg.save(image_stream, format='PNG')
+        image_stream.seek(0)
+        return image_stream
+
+    def get_image(self):
+        image_stream = io.BytesIO()
+        self.image_data.save(image_stream, format='PNG')
+        image_stream.seek(0)
+        return image_stream
+
+    def get_autocontrast(self):
+        image_stream = io.BytesIO()
+        mod_image = self.image_data.convert("RGB")
+        ImageOps.autocontrast(mod_image, cutoff=3).save(image_stream, format='PNG')
         image_stream.seek(0)
         return image_stream
 
@@ -142,7 +157,9 @@ class dedup:
                 if self._hamming_distance(self.file_database[img_path]['fingerprint'], self.file_database[other_file]['fingerprint']) <= self.hamming_diff:
                     self.file_database[img_path]['duplicates'].append(other_file)
         self.output("")
-        self.output("Scan complete. Refer to internal 'file_database' for results.", flush=True)
+        with open("file_database", "w") as f:
+            f.write(json.dumps(self.file_database, indent=4))
+        self.output("Scan complete. Refer to 'file_database' for results.", flush=True)
         return
 
     def generate_deduplicated_file_list(self):

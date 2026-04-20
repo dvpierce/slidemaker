@@ -69,14 +69,14 @@ class slideshow:
     @classmethod
     def create_image_slideshow(cls, input_dir=None, output_file=None, overwrite=False,
                                slide_w=13.333, slide_h=7.5,
-                               transition=0,
-                               bgcolor="000000", slide_duration_sec=5, blurbg=None,
+                               transition="none", auto_contrast=False,
+                               bgcolor="ffffff", slide_duration_sec=5, blurbg=None,
                                deduplicate=False, duplicate_threshold=12):
         prs = Presentation()
         prs.slide_width = Inches(slide_w)
         prs.slide_height = Inches(slide_h)
 
-        if dedup:
+        if deduplicate:
             deduper = dedup(directory=input_dir, hash_size=8, hamming_diff=duplicate_threshold, do_output=True)
             image_files = deduper.get_deduplicated_file_list()
         else:
@@ -104,17 +104,19 @@ class slideshow:
                 r, g, b = imghandler.convert_RGB(bgcolor)
                 slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
 
-            # Insert image on slide.
-            slide.shapes.add_picture(img_path, Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
+            if auto_contrast:
+                slide.shapes.add_picture(i.get_autocontrast(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
+            else:
+                slide.shapes.add_picture(i.get_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
 
             # Add slide transition (or no transition.)
-            if transition == 1:
+            if transition == "fade":
                 transition = cls.fade_transition
-            elif transition == 2:
+            elif transition == "wipe":
                 transition = cls.wipe_transition
-            elif transition == 3:
+            elif transition == "push":
                 transition = cls.push_transition
-            elif transition == 4:
+            elif transition == "ripple":
                 transition = cls.ripple_transition
             else:
                 transition = cls.no_transition
