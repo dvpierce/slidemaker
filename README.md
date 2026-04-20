@@ -10,15 +10,17 @@ Automatically scales photos proportionately to fit the background of a slide. Fi
 
 Default slide size is PowerPoint's default of 13.333 by 7.5 inches, with a 16:9 aspect ratio. Adjust the width/height arguments to get the desired aspect ratio for your application.
 
-**A Note About File Size**: Pictures are big, and they're usually not able to be compressed any more than they already are. So if you have a gigabyte of photographs, you're probably going to end up with a gigabyte of powerpoint slides. There is often a difference, logistically, between dealing with five hundred 2MB files, and a single 1000MB file.
-
 **Examples**:
 
   * For 1920x1200 screens with a 16:10 aspect ratio, you can set --height to 8.333.
   * For 1280x960 screens or other older 4:3 projectors, you can set --width to 10.
-  * For 1280x1024 screens which have that rare 5:4 aspect ration, you can set -width to 10 and --height to 8.
+  * For 1280x1024 screens which have a 5:4 aspect ration, you can set -width to 10 and --height to 8.
 
 Generally speaking, you're almost never going to see anything but 16:9 on a computer. But some places still have the older 4:3 stuff kicking around.
+
+Also, even if you have a newer projector, you might have an older screen which is squareish. Setting the projector to a 4:3 or 5:4 aspect ratio might be preferable in that case as well, if it supports the older video modes.
+
+**A Note About File Size**: Pictures are not individually all that large, although what a "normal" photo take up increases every time somebody oupgrades their smartphone. But they add up. If you have a gigabyte of photographs, you're probably going to end up with a gigabyte of powerpoint presentation. Buy big thumb drives.
 
 #### How To Use
 
