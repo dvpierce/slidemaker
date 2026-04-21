@@ -75,7 +75,7 @@ class imghandler:
         return image_stream
 
     @staticmethod
-    def convert_RGB(hexstring):
+    def convert_RGB(cls, hexstring):
         pattern = r'^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
         if not bool(re.match(pattern, hexstring)):
             raise Exception(f"{hexstring} is not a valid RGB color code.")
@@ -91,6 +91,16 @@ class imghandler:
         else:
             raise Exception(f"{hexstring} is not a valid RGB color code.")
         return (r, g, b)
+
+    @staticmethod
+    def get_appropriate_text_color(hexstring):
+        r, g, b = cls.convert_RGB(hexstring)
+        luminance = (0.299 * r) + (0.587 * g) + (0.114 * b)
+        if luminance >= 128:
+            return 0, 0, 0
+        else:
+            return 255, 255, 255
+
 
 
 class dedup:

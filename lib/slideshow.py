@@ -16,7 +16,7 @@ class slideshow:
       <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" advClick="0" advTm="{timedelay}"/>
     </mc:Fallback>
   </mc:AlternateContent>"""
-    
+
     fade_transition = """<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
       <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="med" p14:dur="700" advClick="0" advTm="{timedelay}">
@@ -34,11 +34,11 @@ class slideshow:
     wipe_transition = """<p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" advClick="0" advTm="{timedelay}">
         <p:wipe/>
     </p:transition>"""
-    
+
     push_transition = """<p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" advClick="0" advTm="{timedelay}">
         <p:push dir="u"/>
     </p:transition>"""
-    
+
     ripple_transition = """<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <mc:Choice xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" Requires="p14">
         <p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" p14:dur="1400" advClick="0" advTm="{timedelay}">
@@ -51,10 +51,10 @@ class slideshow:
         </p:transition>
     </mc:Fallback>
 </mc:AlternateContent>"""
-    
+
     stdout_output = True
     logfile_name = "slideshowmaker.log"
-    
+
     transitions = [
         {"name": "fade", "duration": 700},
         {"name": "ripple", "duration": 2000},
@@ -75,13 +75,14 @@ class slideshow:
                 print(get_time(), *args, **kwargs, file=f)
 
     @classmethod
-    def create_image_slideshow(cls, input_dir=None, output_file=None, overwrite=False,
+    def create_image_slideshow(cls, input_dir=None, folder_structure=None,
+                               output_file=None, overwrite=False,
                                slide_w=13.333, slide_h=7.5,
                                transition="none", auto_contrast=False,
                                bgcolor="ffffff", slide_duration_sec=5, blurbg=None,
                                deduplicate=False, duplicate_threshold=12, resample=0,
                                logfile=False):
-                                   
+
         cls.stdout_output = not logfile
 
         if os.path.exists(output_file) and not overwrite:
