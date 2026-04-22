@@ -73,7 +73,7 @@ Image Quality:
   `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)  
   `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
   
-Other Settings:
+Other Settings:  
   `--logfile`: Use a log file instead of stdout. If you do not provide an argument, a default file name 'slidemaker.log' is used.  
 
 #### Captions File:
