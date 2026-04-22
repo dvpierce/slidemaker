@@ -34,35 +34,37 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition wipe --blurry
 
 #### CLI Arguments
 
+Slide Layout:
   `--width`: Width for slides. Default: 13.333".  
   `--height`: Height for slides. Default: 7.5".  
-  
-  `--input_dir`: Folder full of images. Defaults to current directory.  
-  `--output_file`: Output file name. Defaults to 'Presentation.pptx'.  
-  `--overwrite`: Overwrite existing file if present.  
-  `--add_format`: Force the script to attempt to process files ending in this file extension. (e.g., `.blp` or something.)  
-  &ensp;&ensp;&ensp;&ensp;- The image type still needs to be [supported by Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html).  
-
-  `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.  
-  `--transition`: Select transition type. [none|fade|wipe|push|ripple].  
-  `--bgcolor`: Background color (in RGB hex) for the slides. Default is "#FFFFFF" (white). 3-character shorthand (#FFF) is supported. Case insensitive. '#' is optional.
-  
+  `--bgcolor`: Background color (in RGB hex) for the slides. Default is "#FFFFFF" (white). 3-character shorthand (#FFF) is supported. Case insensitive. '#' is optional.  
   `--blurry_background`: Instead of using the bgcolor, the script will insert a stretched and heavily blurred version of the image behind itself.  
   &ensp;&ensp;&ensp;&ensp;- This will significantly increase file size, since there are now two copies of all the pictures instead of one.  
-  &ensp;&ensp;&ensp;&ensp;- Title slides will still use the background color specified by `--bgcolor`.
-  `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
+  &ensp;&ensp;&ensp;&ensp;- Title slides will still use the background color specified by `--bgcolor`.  
 
+Slideshow Settings:
+  `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.  
+  `--transition`: Select transition type. [none|fade|wipe|push|ripple].  
+  `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
+  `--captions_file`: Specify a filename for photo captions. Captions will be in a textbox, the background of the textbox will match `--bgcolor`. Text will be black or white to best contrast the background color.  
+
+Presentation Output:
+  `--output_file`: Output file name. Defaults to 'Presentation.pptx'.  
+  `--overwrite`: Overwrite existing file if present.  
+
+Image Selection:  
+  `--input_dir`: Folder full of images. Defaults to current directory.  
+  `--subfolders`: Instead of only looking in `input_dir` for images, looks recursively in subfolders also.  
   `--deduplicate`: Find and omit similar-looking images based on similarity threshold. This will also save a JSON full of duplicate image info.  
   `--threshold`: Minimum "Hamming Distance" between two photos for duplicate detection. (Does nothing unless --deduplicate is also set, defaults to 12.)
 
-  `--transition`: Which type of slide transition to use. (If not specified, uses none.)  
+Image Quality:  
   `--auto_adjust`: Applies an auto-levels to each photo, and a gamma adjustment to the ones that are too dark.
   `--image_quality`: Level of JPEG compression to use when saving slides. Defaults to 75. Allowed range is 1-100. Bigger numbers mean bigger files but higher image quality.
-  `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)
-
-  `--subfolders`: Instead of only looking in 'input_dir' for images, looks recursively in subfolders also.  
-  `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
-  `--captions_file`: Specify a filename for photo captions. Captions will be in a textbox, the background of the textbox will match `--bgcolor`. Text will be black or white to best contrast the background color.  
+  `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)  
+  `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
+  
+Other Settings:
   `--logfile`: Use a log file instead of stdout. If you do not provide an argument, a default file name 'slidemaker.log' is used.  
 
 #### Captions File:
