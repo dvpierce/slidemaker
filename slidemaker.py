@@ -4,6 +4,7 @@ import argparse
 
 from lib.slideshow import slideshow
 from lib.validators import validators as v
+from lib.helpers import my_logger
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-w", "--width",
@@ -72,9 +73,10 @@ parser.add_argument("-s", "--resample",
                     type=int,
                     default=0)
 parser.add_argument("--logfile",
-                    help="Save output to log instead.",
-                    required=False,
-                    action="store_true")
+                    help="Save output to log [LOGFILE] instead. Defaults to 'slidemaker.log' if no value is given",
+                    nargs='?',
+                    const='slidemaker.log',
+                    default=None)
 parser.add_argument("--subfolders",
                     help="Scan input directory for subfolders and use those photos too.",
                     required=False,
@@ -92,7 +94,6 @@ args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    # slideshow.stdout_output = False
     slideshowmaker = slideshow(input_dir=args.input_dir,
                            output_file=args.output_file,
                            slide_w=args.width,

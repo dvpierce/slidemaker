@@ -5,6 +5,27 @@ import numpy as np
 import re
 import json
 import datetime
+import threading
+
+class my_logger:
+    log_lock = threading.Lock()
+
+    def __init__(self, file=None):
+        self.use_file = file
+        return
+
+    def _get_time(self):
+        return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))
+
+    def logit(self, *args, **kwargs):
+        with my_logger.log_lock:
+            if self.use_file:
+                with open(self.use_file, "a") as f:
+                    value = kwargs.pop('end', None)
+                    value = kwargs.pop('flush', None)
+                    print(self._get_time(), *args, **kwargs, file=f, flush=True)
+            else:
+                print(self._get_time(), *args, **kwargs)
 
 class imghandler:
     def __init__(self, img_path, slide_w=13.333, slide_h=7.5):
@@ -104,32 +125,21 @@ class imghandler:
 
 
 class dedup:
-    def __init__(self, directory=".", hash_size=8, hamming_diff=12, do_output=True, forcetype=None):
+    def __init__(self, directory=".", hash_size=8, hamming_diff=12, out_log=None, forcetype=None):
         self.directory = directory
         self.hash_size = hash_size
         self.hamming_diff = hamming_diff
         self.file_database = dict()
-        self.do_output = do_output
         self.ddlist = None
         self.force = forcetype
-        self.logfile_name = "slideshowmaker.log"
+        self.out_log = out_log
 
     def output(self, *args, **kwargs):
-        def get_time():
-            return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))
-        if self.do_output:
-            print(get_time(), *args, **kwargs)
+        if not self.out_log:
+            value = kwargs.pop('flush', None)
+            print(*args, **kwargs, flush=True)
         else:
-            with open(self.logfile_name, "a") as f:
-                value = kwargs.pop('end', None)
-                print(get_time(), *args, **kwargs, file=f)
-
-    def toggle_stdoutput(self):
-        self.do_output = not self.do_output
-        return self.do_output
-
-    def get_stdoutput(self):
-        return self.do_output
+            self.out_log.logit(*args, **kwargs)
 
     def set_scandir(self, new_directory):
         if os.path.isdir(new_directory):

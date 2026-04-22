@@ -4,8 +4,9 @@ from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.oxml import parse_xml
 from pptx.enum.text import MSO_AUTO_SIZE, MSO_ANCHOR, PP_ALIGN
+from threading import Lock
 
-from lib.helpers import dedup, imghandler
+from lib.helpers import dedup, imghandler, my_logger
 import yaml
 import datetime
 
@@ -30,8 +31,7 @@ class slideshow:
         <p:fade/>
       </p:transition>
     </mc:Fallback>
-  </mc:AlternateContent>
-"""
+  </mc:AlternateContent>"""
 
     wipe_transition = """<p:transition xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" spd="slow" advClick="0" advTm="{timedelay}">
         <p:wipe/>
@@ -54,7 +54,6 @@ class slideshow:
     </mc:Fallback>
 </mc:AlternateContent>"""
 
-    logfile_name = "slideshowmaker.log"
     transitions = [
         {"name": "fade", "duration": 700},
         {"name": "ripple", "duration": 2000},
@@ -74,7 +73,7 @@ class slideshow:
                  deduplicate=False,
                  duplicate_threshold=12,
                  resample=0,
-                 logfile=False,
+                 logfile=None,
                  subfolders=False,
                  titles=False,
                  captions_file=None):
@@ -91,26 +90,20 @@ class slideshow:
         self.deduplicate = deduplicate
         self.duplicate_threshold = duplicate_threshold
         self.resample=0
-        self.logfile = False
         self.subfolders = subfolders
         self.titles = titles
         self.captions = captions_file
         if self.captions:
             self.enable_captions = True
             self.captiondata = yaml.safe_load(open(self.captions, "r").read())
+        self.showstopper = Lock()
+        self.out_log = my_logger(file=logfile)
         return
 
     def output(self, *args, **kwargs):
-        def get_time():
-            return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))
-        if not self.logfile:
-            print(get_time(), *args, **kwargs)
-        else:
-            with open(self.logfile_name, "a") as f:
-                value = kwargs.pop('end', None)
-                print(get_time(), *args, **kwargs, file=f)
+        self.out_log.logit(*args, **kwargs)
 
-    def insert_caption(self):
+    def _insert_caption(self):
         if self.enable_captions:
             if self.current_imagehandler.filename not in self.captiondata.keys():
                 self.output(f"{self.current_imagehandler.filename} has no caption...")
@@ -140,7 +133,7 @@ class slideshow:
                 txBox.text_frame.fit_text(font_family='Calibri', max_size=24)
         return
 
-    def insert_title_slide(self, title_text):
+    def _insert_title_slide(self, title_text):
         self.current_slide_layout = self.current_presentation.slide_layouts[6]
         self.current_slide = self.current_presentation.slides.add_slide(self.current_slide_layout)
         self.current_slide.background.fill.solid()
@@ -168,7 +161,7 @@ class slideshow:
         txBox.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
         txBox.text_frame.fit_text(font_family='Calibri', max_size=48)
 
-    def insert_slides(self, image_files):
+    def _insert_slides(self, image_files):
         count = 0
         for img_path in image_files:
             count += 1
@@ -206,7 +199,7 @@ class slideshow:
             else:
                 self.current_slide.shapes.add_picture(self.current_imagehandler.get_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
 
-            self.insert_caption()
+            self._insert_caption()
 
             # Add slide transition (or no transition.)
             if self.transition == "fade":
@@ -225,35 +218,42 @@ class slideshow:
             self.current_slide.element.insert(-1, fragment)
 
     def create_image_slideshow(self):
-        if os.path.exists(self.output_file) and not self.overwrite:
-            raise FileExistsError(f"{output_file} already exists. Not set to overwrite.")
+        with self.showstopper:
+            if os.path.exists(self.output_file) and not self.overwrite:
+                raise FileExistsError(f"{output_file} already exists. Not set to overwrite.")
 
-        self.current_presentation = Presentation()
-        self.current_presentation.slide_width = Inches(self.slide_w)
-        self.current_presentation.slide_height = Inches(self.slide_h)
+            self.current_presentation = Presentation()
+            self.current_presentation.slide_width = Inches(self.slide_w)
+            self.current_presentation.slide_height = Inches(self.slide_h)
 
-        if self.subfolders:
-            directories = [f"{self.input_dir}{os.sep}{fname}" for fname in os.listdir(self.input_dir) if os.path.isdir(self.input_dir + os.sep + fname)]
-        else:
-            directories = [self.input_dir]
-
-        for directory in directories:
-            if self.titles:
-                title_text = os.path.basename(directory)
-                self.insert_title_slide(title_text)
-            if self.deduplicate:
-                deduper = dedup(directory=directory, hash_size=8, hamming_diff=duplicate_threshold, do_output=True)
-                deduper.do_output = not self.logfile
-                image_files = deduper.get_deduplicated_file_list()
+            if self.subfolders:
+                directories = [f"{self.input_dir}{os.sep}{fname}" for fname in os.listdir(self.input_dir) if os.path.isdir(self.input_dir + os.sep + fname)]
             else:
-                image_files = [f"{directory}{os.sep}{file}" for file in os.listdir(directory)]
+                directories = [self.input_dir]
 
-            self.insert_slides(image_files)
+            dircount = 0
+            for directory in sorted(directories):
+                dircount += 1
+                self.output(f"Processing folder {dircount} of {len(directories)}...")
+                if self.titles:
+                    # Insert title slide (using name of directory as the title text)
+                    title_text = os.path.basename(directory)
+                    self._insert_title_slide(title_text)
+                if self.deduplicate:
+                    # Deduplicate the contents of the folder
+                    deduper = dedup(directory=directory, hash_size=8, hamming_diff=self.duplicate_threshold, out_log=self.out_log)
+                    image_files = deduper.get_deduplicated_file_list()
+                else:
+                    # Or not
+                    image_files = [f"{directory}{os.sep}{file}" for file in os.listdir(directory)]
 
-        self.output("")
-        self.output(f"Saving {self.output_file}...")
-        if os.path.exists(self.output_file):
-            self.output(f"Warning: {self.output_file} exists and will be overwritten. (--overwrite enabled.)")
-        self.current_presentation.save(self.output_file)
-        self.output(f"Successfully created: {self.output_file}")
+                # Insert slides - create one slide per photo.
+                self._insert_slides(image_files)
+
+            self.output("")
+            self.output(f"Saving {self.output_file}...")
+            if os.path.exists(self.output_file):
+                self.output(f"Warning: {self.output_file} exists and will be overwritten. (--overwrite enabled.)")
+            self.current_presentation.save(self.output_file)
+            self.output(f"Successfully created: {self.output_file}")
         return True
