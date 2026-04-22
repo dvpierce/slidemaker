@@ -62,7 +62,7 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition wipe --blurry
 
   `--subfolders`: Instead of only looking in 'input_dir' for images, looks recursively in subfolders also.  
   `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
-  `--captions_file`: Specify a filename for photo captions.  
+  `--captions_file`: Specify a filename for photo captions. Captions will be in a textbox, the background of the textbox will match `--bgcolor`. Text will be black or white to best contrast the background color.  
   `--logfile`: Use a log file instead of stdout. If you do not provide an argument, a default file name 'slidemaker.log' is used.  
 
 #### Captions File:

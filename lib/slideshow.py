@@ -117,26 +117,39 @@ class slideshow:
             else:
                 left = Inches(0)
                 top = Inches(self.slide_h - 0.5)
-                width = Inches(self.slide_w / 3)
+                width = Inches(self.slide_w)
                 height = Inches(0.5)
 
                 txBox = self.current_slide.shapes.add_textbox(left, top, width, height)
                 txBox.fill.solid()
-                txBox.fill.fore_color.rgb = RGBColor(255, 255, 255)
+
+                r, g, b = imghandler.convert_RGB(self.bgcolor)
+                txBox.fill.fore_color.rgb = RGBColor(r, g, b)
 
                 txBox.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
                 tf = txBox.text_frame
-                tf.word_wrap = False
 
                 p = tf.paragraphs[0]
                 run = p.add_run()
                 run.text = self.captiondata[self.current_imagehandler.filename]
-                font = run.font
-                font.name = 'Calibri'
-                font.bold = True
-                font.color.rgb = RGBColor(0, 0, 0)
+
                 txBox.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
                 txBox.text_frame.fit_text(font_family='Calibri', max_size=24)
+
+                # After a fit_text operation, reset the location/dimensions of the text box so it still covers the bottom half inch of the slide.
+                txBox.width = width
+                txBox.height = height
+                txBox.left = left
+                txBox.top = top
+
+                tf.word_wrap = False
+                font = run.font
+                font.name = "Garamond"
+                font.bold = False
+                font.italic = True
+                r, g, b = imghandler.get_appropriate_text_color(self.bgcolor)
+                font.color.rgb = RGBColor(r, g, b)
+
         return
 
     def _insert_title_slide(self, title_text):
@@ -153,7 +166,7 @@ class slideshow:
 
         txBox = self.current_slide.shapes.add_textbox(left, top, width, height)
         txBox.fill.solid()
-        txBox.fill.fore_color.rgb = RGBColor(255, 255, 255)
+        txBox.fill.fore_color.rgb = RGBColor(r, g, b)
 
         txBox.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
         tf = txBox.text_frame
@@ -163,9 +176,10 @@ class slideshow:
         run = p.add_run()
         run.text = title_text
         font = run.font
-        font.name = 'Calibri'
+        font.name = 'Garamond'
         font.bold = True
-        font.color.rgb = RGBColor(0, 0, 0)
+        r, g, b = imghandler.get_appropriate_text_color(self.bgcolor)
+        font.color.rgb = RGBColor(r, g, b)
         txBox.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
         txBox.text_frame.fit_text(font_family='Calibri', max_size=48)
 
