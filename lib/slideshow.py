@@ -113,7 +113,6 @@ class slideshow:
     def _insert_caption(self):
         if self.enable_captions:
             if self.current_imagehandler.filename not in self.captiondata.keys():
-                self.output(f"{self.current_imagehandler.filename} has no caption...")
                 return
             else:
                 left = Inches(0)
@@ -144,6 +143,8 @@ class slideshow:
         self.current_slide_layout = self.current_presentation.slide_layouts[6]
         self.current_slide = self.current_presentation.slides.add_slide(self.current_slide_layout)
         self.current_slide.background.fill.solid()
+        r, g, b = imghandler.convert_RGB(self.bgcolor)
+        self.current_slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
 
         left = Inches(1)
         top = Inches(self.slide_h/2 - 1)
@@ -197,10 +198,7 @@ class slideshow:
                 self.current_slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
 
             if self.resample != 0:
-                if self.current_imagehandler.resample():
-                    self.output(f"Image {self.current_imagehandler.filename} resized.")
-                else:
-                    self.output(f"Image {self.current_imagehandler.filename} not resized - already small enough.")
+                self.current_imagehandler.resample()
 
             if self.auto_adjust:
                 self.current_slide.shapes.add_picture(self.current_imagehandler.get_autoadjusted_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
@@ -244,7 +242,6 @@ class slideshow:
 
             if self.subfolders:
                 directories = self._find_subdirs()
-                print(directories)
             else:
                 directories = [self.input_dir]
 
@@ -262,7 +259,7 @@ class slideshow:
                     image_files = deduper.get_deduplicated_file_list()
                 else:
                     # Or not
-                    image_files = [f"{directory}{os.sep}{file}" for file in os.listdir(directory)]
+                    image_files = [f"{directory}{os.sep}{file}" for file in os.listdir(directory) if imghandler.is_supported(file)]
 
                 # Insert slides - create one slide per photo.
                 self._insert_slides(image_files)

@@ -49,6 +49,7 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition wipe --blurry
   
   `--blurry_background`: Instead of using the bgcolor, the script will insert a stretched and heavily blurred version of the image behind itself.  
   &ensp;&ensp;&ensp;&ensp;- This will significantly increase file size, since there are now two copies of all the pictures instead of one.  
+  &ensp;&ensp;&ensp;&ensp;- Title slides will still use the background color specified by `--bgcolor`.
   `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
 
   `--deduplicate`: Find and omit similar-looking images based on similarity threshold. This will also save a JSON full of duplicate image info.  

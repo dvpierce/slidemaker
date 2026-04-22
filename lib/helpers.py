@@ -28,6 +28,8 @@ class my_logger:
                 print(self._get_time(), *args, **kwargs)
 
 class imghandler:
+    valid_extensions = tuple([ex for ex, f in Image.registered_extensions().items() if f in Image.OPEN])
+
     def __init__(self, img_path, slide_w=13.333, slide_h=7.5, image_quality=75, maxres=300):
         self.image = img_path
         self.filename = os.path.basename(self.image)
@@ -151,6 +153,10 @@ class imghandler:
         else:
             return 255, 255, 255
 
+    @staticmethod
+    def is_supported(filename):
+        return filename.endswith(imghandler.valid_extensions)
+
 
 class dedup:
     def __init__(self, directory=".", hash_size=8, hamming_diff=12, out_log=None, forcetype=None):
@@ -177,13 +183,8 @@ class dedup:
             raise Exception(f"{new_directory} is not a directory.")
 
     def scandir(self):
-        valid_extensions = ('.avif', '.bmp', '.gif', '.j2k', '.jp2', '.jpx', '.pcx', '.tiff', '.tif', '.jpg', '.jpeg', '.png', '.webp')
-        if self.force:
-            if not self.force.startswith("."):
-                self.force = f".{self.force}"
-            valid_extensions.add(self.force.lower())
         count = 0
-        files = [ file for file in os.listdir(self.directory) if file.lower().endswith(valid_extensions) ]
+        files = [ file for file in os.listdir(self.directory) if file.lower().endswith(imghandler.valid_extensions) ]
         for file in files:
             count += 1
             img_path = f"{os.path.abspath(self.directory)}{os.sep}{file}"
