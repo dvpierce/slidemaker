@@ -29,7 +29,7 @@ Also, even if you have a newer projector, you might have an older screen which i
 # with blurred image backgrounds and wipe transitions.
 # Remove duplicates.
 
-python slidemaker.py --input_dir ./imgs --deduplicate --transition 2 --blurry_background
+python slidemaker.py --input_dir ./imgs --deduplicate --transition wipe --blurry_background
 ```
 
 #### CLI Arguments
