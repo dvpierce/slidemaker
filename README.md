@@ -2,9 +2,7 @@
 
 Turn a folder of photos (or a folder tree) into PowerPoint slides. Includes fingerprint-based dedup, so you can let it loose on a huge folder of old photos and have a nice slide show in minutes for your next wedding reception or funeral.
 
-```
-.avif, .bmp, .gif, .j2k, .jp2, .jpx, .pcx, .tiff, .tif, .jpg, .jpeg, .png, .webp
-```
+Supported image file types are whatever the [Pillow library](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html) supports.
 
 Automatically scales photos proportionately to fit the background of a slide. Fills in the background with the color of your choice, or a blurred/stretched version of the photo. (Like how those vertical videos get letterboxed on YouTube or Instagram.)
 
