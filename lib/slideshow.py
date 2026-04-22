@@ -3,8 +3,10 @@ from pptx import Presentation
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
 from pptx.oxml import parse_xml
+from pptx.enum.text import MSO_AUTO_SIZE, MSO_ANCHOR, PP_ALIGN
 
 from lib.helpers import dedup, imghandler
+import yaml
 import datetime
 
 class slideshow:
@@ -52,106 +54,206 @@ class slideshow:
     </mc:Fallback>
 </mc:AlternateContent>"""
 
-    stdout_output = True
     logfile_name = "slideshowmaker.log"
-
     transitions = [
         {"name": "fade", "duration": 700},
         {"name": "ripple", "duration": 2000},
     ]
 
-    def __init__(self):
+    def __init__(self,
+                 input_dir=None,
+                 output_file=None,
+                 overwrite=False,
+                 slide_w=13.333,
+                 slide_h=7.5,
+                 transition="none",
+                 auto_contrast=False,
+                 bgcolor="ffffff",
+                 slide_duration_sec=5,
+                 blurbg=None,
+                 deduplicate=False,
+                 duplicate_threshold=12,
+                 resample=0,
+                 logfile=False,
+                 subfolders=False,
+                 titles=False,
+                 captions_file=None):
+        self.input_dir = input_dir
+        self.output_file = output_file
+        self.overwrite = overwrite
+        self.slide_w = slide_w
+        self.slide_h = slide_h
+        self.transition = transition
+        self.auto_contrast = auto_contrast
+        self.bgcolor = bgcolor
+        self.slide_duration_sec = slide_duration_sec
+        self.blurbg = blurbg
+        self.deduplicate = deduplicate
+        self.duplicate_threshold = duplicate_threshold
+        self.resample=0
+        self.logfile = False
+        self.subfolders = subfolders
+        self.titles = titles
+        self.captions = captions_file
+        if self.captions:
+            self.enable_captions = True
+            self.captiondata = yaml.safe_load(open(self.captions, "r").read())
         return
 
-    @classmethod
-    def output(cls, *args, **kwargs):
+    def output(self, *args, **kwargs):
         def get_time():
             return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))
-        if cls.stdout_output:
+        if not self.logfile:
             print(get_time(), *args, **kwargs)
         else:
-            with open(cls.logfile_name, "a") as f:
+            with open(self.logfile_name, "a") as f:
                 value = kwargs.pop('end', None)
                 print(get_time(), *args, **kwargs, file=f)
 
-    @classmethod
-    def create_image_slideshow(cls, input_dir=None, folder_structure=None,
-                               output_file=None, overwrite=False,
-                               slide_w=13.333, slide_h=7.5,
-                               transition="none", auto_contrast=False,
-                               bgcolor="ffffff", slide_duration_sec=5, blurbg=None,
-                               deduplicate=False, duplicate_threshold=12, resample=0,
-                               logfile=False):
+    def insert_caption(self):
+        if self.enable_captions:
+            if self.current_imagehandler.filename not in self.captiondata.keys():
+                self.output(f"{self.current_imagehandler.filename} has no caption...")
+                return
+            else:
+                left = Inches(0)
+                top = Inches(self.slide_h - 0.5)
+                width = Inches(self.slide_w / 3)
+                height = Inches(0.5)
 
-        cls.stdout_output = not logfile
+                txBox = self.current_slide.shapes.add_textbox(left, top, width, height)
+                txBox.fill.solid()
+                txBox.fill.fore_color.rgb = RGBColor(255, 255, 255)
 
-        if os.path.exists(output_file) and not overwrite:
-            raise FileExistsError(f"{output_file} already exists. Not set to overwrite.")
+                txBox.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+                tf = txBox.text_frame
+                tf.word_wrap = False
 
-        prs = Presentation()
-        prs.slide_width = Inches(slide_w)
-        prs.slide_height = Inches(slide_h)
+                p = tf.paragraphs[0]
+                run = p.add_run()
+                run.text = self.captiondata[self.current_imagehandler.filename]
+                font = run.font
+                font.name = 'Calibri'
+                font.bold = True
+                font.color.rgb = RGBColor(0, 0, 0)
+                txBox.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+                txBox.text_frame.fit_text(font_family='Calibri', max_size=24)
+        return
 
-        if deduplicate:
-            deduper = dedup(directory=input_dir, hash_size=8, hamming_diff=duplicate_threshold, do_output=True)
-            deduper.do_output = cls.stdout_output
-            image_files = deduper.get_deduplicated_file_list()
-        else:
-            image_files = [f"{input_dir}{os.sep}{file}" for file in os.listdir(input_dir)]
+    def insert_title_slide(self, title_text):
+        self.current_slide_layout = self.current_presentation.slide_layouts[6]
+        self.current_slide = self.current_presentation.slides.add_slide(self.current_slide_layout)
+        self.current_slide.background.fill.solid()
 
+        left = Inches(1)
+        top = Inches(self.slide_h/2 - 1)
+        width = Inches(self.slide_w - 2)
+        height = Inches(1.5)
+
+        txBox = self.current_slide.shapes.add_textbox(left, top, width, height)
+        txBox.fill.solid()
+        txBox.fill.fore_color.rgb = RGBColor(255, 255, 255)
+
+        txBox.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tf = txBox.text_frame
+        tf.word_wrap = False
+
+        p = tf.paragraphs[0]
+        run = p.add_run()
+        run.text = title_text
+        font = run.font
+        font.name = 'Calibri'
+        font.bold = True
+        font.color.rgb = RGBColor(0, 0, 0)
+        txBox.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+        txBox.text_frame.fit_text(font_family='Calibri', max_size=48)
+
+    def insert_slides(self, image_files):
         count = 0
         for img_path in image_files:
             count += 1
-            cls.output(f"Creating slide {count} of {len(image_files)}...", end="\r", flush=True)
+            self.output(f"Creating slide {count} of {len(image_files)}...", end="\r", flush=True)
 
             # Use a blank slide layout (index 6 is usually blank)
-            slide_layout = prs.slide_layouts[6]
-            slide = prs.slides.add_slide(slide_layout)
-            slide.background.fill.solid()
+            self.current_slide_layout = self.current_presentation.slide_layouts[6]
+            self.current_slide = self.current_presentation.slides.add_slide(self.current_slide_layout)
+            self.current_slide.background.fill.solid()
 
             # Determine desired size and position of image.
-            i = imghandler(img_path, slide_w=slide_w, slide_h=slide_h)
-            width, height = i.get_limits()
-            xoffset, yoffset = i.get_offsets()
+            try:
+                self.current_imagehandler = imghandler(img_path, slide_w=self.slide_w, slide_h=self.slide_h)
+            except:
+                # If there's an error creating the image handler, skip this image. It's probably just a bad file.
+                continue
+            width, height = self.current_imagehandler.get_limits()
+            xoffset, yoffset = self.current_imagehandler.get_offsets()
 
             # Insert background on slide.
-            if blurbg:
-                slide.shapes.add_picture(i.blur_stretch(), 0, 0, width=Inches(slide_w), height=Inches(slide_h))
+            if self.blurbg:
+                self.current_slide.shapes.add_picture(i.blur_stretch(), 0, 0, width=Inches(self.slide_w), height=Inches(self.slide_h))
             else:
-                r, g, b = imghandler.convert_RGB(bgcolor)
-                slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
+                r, g, b = imghandler.convert_RGB(self.bgcolor)
+                self.current_slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
 
-            if resample != 0:
-                if i.resample(maxres=resample):
-                    cls.output(f"Image {i.image} resized.")
+            if self.resample != 0:
+                if self.current_imagehandler.resample(maxres=self.resample):
+                    self.output(f"Image {i.image} resized.")
                 else:
-                    cls.output(f"Image {i.image} not resized - already small enough.")
+                    self.output(f"Image {i.image} not resized - already small enough.")
 
-            if auto_contrast:
-                slide.shapes.add_picture(i.get_autocontrast(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
+            if self.auto_contrast:
+                self.current_slide.shapes.add_picture(self.current_imagehandler.get_autocontrast(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
             else:
-                slide.shapes.add_picture(i.get_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
+                self.current_slide.shapes.add_picture(self.current_imagehandler.get_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
+
+            self.insert_caption()
 
             # Add slide transition (or no transition.)
-            if transition == "fade":
-                transition = cls.fade_transition
-            elif transition == "wipe":
-                transition = cls.wipe_transition
-            elif transition == "push":
-                transition = cls.push_transition
-            elif transition == "ripple":
-                transition = cls.ripple_transition
+            if self.transition == "fade":
+                transition = self.fade_transition
+            elif self.transition == "wipe":
+                transition = self.wipe_transition
+            elif self.transition == "push":
+                transition = self.push_transition
+            elif self.transition == "ripple":
+                transition = self.ripple_transition
             else:
-                transition = cls.no_transition
+                transition = self.no_transition
 
-            xml = transition.format(timedelay = str(slide_duration_sec * 1000))
+            xml = transition.format(timedelay = str(self.slide_duration_sec * 1000))
             fragment = parse_xml(xml)
-            slide.element.insert(-1, fragment)
+            self.current_slide.element.insert(-1, fragment)
 
-        cls.output("")
-        cls.output(f"Saving {output_file}...")
-        if os.path.exists(output_file):
-            cls.output(f"Warning: {output_file} exists and will be overwritten. (--overwrite enabled.)")
-        prs.save(output_file)
-        cls.output(f"Successfully created: {output_file}")
+    def create_image_slideshow(self):
+        if os.path.exists(self.output_file) and not self.overwrite:
+            raise FileExistsError(f"{output_file} already exists. Not set to overwrite.")
+
+        self.current_presentation = Presentation()
+        self.current_presentation.slide_width = Inches(self.slide_w)
+        self.current_presentation.slide_height = Inches(self.slide_h)
+
+        if self.subfolders:
+            directories = [f"{self.input_dir}{os.sep}{fname}" for fname in os.listdir(self.input_dir) if os.path.isdir(self.input_dir + os.sep + fname)]
+        else:
+            directories = [self.input_dir]
+
+        for directory in directories:
+            if self.titles:
+                title_text = os.path.basename(directory)
+                self.insert_title_slide(title_text)
+            if self.deduplicate:
+                deduper = dedup(directory=directory, hash_size=8, hamming_diff=duplicate_threshold, do_output=True)
+                deduper.do_output = not self.logfile
+                image_files = deduper.get_deduplicated_file_list()
+            else:
+                image_files = [f"{directory}{os.sep}{file}" for file in os.listdir(directory)]
+
+            self.insert_slides(image_files)
+
+        self.output("")
+        self.output(f"Saving {self.output_file}...")
+        if os.path.exists(self.output_file):
+            self.output(f"Warning: {self.output_file} exists and will be overwritten. (--overwrite enabled.)")
+        self.current_presentation.save(self.output_file)
+        self.output(f"Successfully created: {self.output_file}")
         return True

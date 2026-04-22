@@ -9,6 +9,7 @@ import datetime
 class imghandler:
     def __init__(self, img_path, slide_w=13.333, slide_h=7.5):
         self.image = img_path
+        self.filename = os.path.basename(self.image)
         self.slide_w = slide_w
         self.slide_h = slide_h
         self.image_data = Image.open(self.image)
@@ -57,25 +58,25 @@ class imghandler:
         stretched = original.resize((int(self.slide_w*100), int(self.slide_h*100)))
         blurred_bg = stretched.filter(ImageFilter.GaussianBlur(radius=20))
         image_stream = io.BytesIO()
-        blurred_bg.save(image_stream, format='PNG')
+        blurred_bg.save(image_stream, format='JPEG')
         image_stream.seek(0)
         return image_stream
 
     def get_image(self):
         image_stream = io.BytesIO()
-        self.image_data.save(image_stream, format='PNG')
+        self.image_data.save(image_stream, format='JPEG')
         image_stream.seek(0)
         return image_stream
 
     def get_autocontrast(self):
         image_stream = io.BytesIO()
         mod_image = self.image_data.convert("RGB")
-        ImageOps.autocontrast(mod_image, cutoff=3).save(image_stream, format='PNG')
+        ImageOps.autocontrast(mod_image, cutoff=3).save(image_stream, format='JPEG')
         image_stream.seek(0)
         return image_stream
 
     @staticmethod
-    def convert_RGB(cls, hexstring):
+    def convert_RGB(hexstring):
         pattern = r'^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
         if not bool(re.match(pattern, hexstring)):
             raise Exception(f"{hexstring} is not a valid RGB color code.")
@@ -94,13 +95,12 @@ class imghandler:
 
     @staticmethod
     def get_appropriate_text_color(hexstring):
-        r, g, b = cls.convert_RGB(hexstring)
+        r, g, b = imghandler.convert_RGB(hexstring)
         luminance = (0.299 * r) + (0.587 * g) + (0.114 * b)
         if luminance >= 128:
             return 0, 0, 0
         else:
             return 255, 255, 255
-
 
 
 class dedup:
@@ -113,7 +113,7 @@ class dedup:
         self.ddlist = None
         self.force = forcetype
         self.logfile_name = "slideshowmaker.log"
-    
+
     def output(self, *args, **kwargs):
         def get_time():
             return str(datetime.datetime.now(datetime.UTC).isoformat(timespec='seconds'))

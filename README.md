@@ -1,6 +1,6 @@
 ### Slidemaker
 
-Turn a folder of photos into PowerPoint slides. Includes fingerprint-based dedup, so you can let it loose on a huge folder of old photos and have a nice slide show in minutes for your next wedding reception or funeral.
+Turn a folder of photos (or a folder tree) into PowerPoint slides. Includes fingerprint-based dedup, so you can let it loose on a huge folder of old photos and have a nice slide show in minutes for your next wedding reception or funeral.
 
 ```
 .avif, .bmp, .gif, .j2k, .jp2, .jpx, .pcx, .tiff, .tif, .jpg, .jpeg, .png, .webp
@@ -53,6 +53,29 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition 2 --blurry_ba
 
   `--deduplicate`: Find and omit similar-looking images based on similarity threshold. This will also save a JSON full of duplicate image info.  
   `--threshold`: Minimum "Hamming Distance" between two photos for duplicate detection. (Does nothing unless --deduplicate is also set, defaults to 12.)
+
+  `--transition`: Which type of slide transition to use. (If not specified, uses none.)  
+  `--auto_contrast`: Applies an auto_contrast adjustment to each photo.  
+  `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)
+  `--subfolders`: Instead of looking in 'input_dir' for images, looks for subfolders of 'input_dir'. Not recursive. (Yet)
+  `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.
+  `--captions_file`: Specify a filename for photo captions.
+
+#### Captions File:
+
+Captions file basically is a yaml file full of key/value pairs, which looks like this:
+
+```
+# captions.yaml
+photo1.jpg: 'This is the caption for photo1'
+photo2.jpg: 'This is a different caption.'
+photo3.jpg: 'Also a caption for photo3.'
+...
+```
+
+As each image/slide is prepared, the caption file will be checked, and if the filename has a caption specified, it will be placed in the lower left of the slide.
+  * The caption will obscure some of the image.  
+  * You do not have to provide captions for all of the photos. 
 
 #### Deduplicating and the Hamming Distance
 
