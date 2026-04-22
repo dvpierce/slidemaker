@@ -66,10 +66,10 @@ Image Selection:
   `--threshold`: Minimum "Hamming Distance" between two photos for duplicate detection. (Does nothing unless --deduplicate is also set, defaults to 12.)
 
 Image Quality:  
-  `--auto_adjust`: Applies an auto-levels to each photo, and a gamma adjustment to the ones that are too dark.
-  `--image_quality`: Level of JPEG compression to use when saving slides. Defaults to 75. 
-  &ensp;&ensp;&ensp;&ensp;- Allowed range is 1-100.
-  &ensp;&ensp;&ensp;&ensp;- Bigger numbers mean bigger files but higher image quality.
+  `--auto_adjust`: Applies an auto-levels to each photo, and a gamma adjustment to the ones that are too dark.  
+  `--image_quality`: Level of JPEG compression to use when saving slides. Defaults to 75.  
+  &ensp;&ensp;&ensp;&ensp;- Allowed range is 1-100.  
+  &ensp;&ensp;&ensp;&ensp;- Bigger numbers mean bigger files but higher image quality.  
   `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)  
   `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
   
