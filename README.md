@@ -34,7 +34,7 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition wipe --blurry
 
 #### CLI Arguments
 
-Slide Layout:
+Slide Layout:  
   `--width`: Width for slides. Default: 13.333".  
   `--height`: Height for slides. Default: 7.5".  
   `--bgcolor`: Background color (in RGB hex) for the slides. Default is "#FFFFFF" (white). 3-character shorthand (#FFF) is supported. Case insensitive. '#' is optional.  
@@ -42,13 +42,13 @@ Slide Layout:
   &ensp;&ensp;&ensp;&ensp;- This will significantly increase file size, since there are now two copies of all the pictures instead of one.  
   &ensp;&ensp;&ensp;&ensp;- Title slides will still use the background color specified by `--bgcolor`.  
 
-Slideshow Settings:
+Slideshow Settings:  
   `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.  
   `--transition`: Select transition type. [none|fade|wipe|push|ripple].  
   `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
   `--captions_file`: Specify a filename for photo captions. Captions will be in a textbox, the background of the textbox will match `--bgcolor`. Text will be black or white to best contrast the background color.  
 
-Presentation Output:
+Presentation Output:  
   `--output_file`: Output file name. Defaults to 'Presentation.pptx'.  
   `--overwrite`: Overwrite existing file if present.  
 
