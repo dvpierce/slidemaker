@@ -37,16 +37,23 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition wipe --blurry
 Slide Layout:  
   `--width`: Width for slides. Default: 13.333".  
   `--height`: Height for slides. Default: 7.5".  
-  `--bgcolor`: Background color (in RGB hex) for the slides. Default is "#FFFFFF" (white). 3-character shorthand (#FFF) is supported. Case insensitive. '#' is optional.  
+  `--bgcolor`: Background color (in RGB hex) for the slides.  
+  &ensp;&ensp;&ensp;&ensp;- Default is "#FFFFFF" (white).  
+  &ensp;&ensp;&ensp;&ensp;- 3-character shorthand (#FFF) is supported.  
+  &ensp;&ensp;&ensp;&ensp;- Case insensitive.  
+  &ensp;&ensp;&ensp;&ensp;- '#' is optional.  
   `--blurry_background`: Instead of using the bgcolor, the script will insert a stretched and heavily blurred version of the image behind itself.  
   &ensp;&ensp;&ensp;&ensp;- This will significantly increase file size, since there are now two copies of all the pictures instead of one.  
-  &ensp;&ensp;&ensp;&ensp;- Title slides will still use the background color specified by `--bgcolor`.  
+  &ensp;&ensp;&ensp;&ensp;- Title slides will use the background color specified by `--bgcolor`.  
 
 Slideshow Settings:  
   `--duration`: Delay between each slide transition, in seconds. Defaults to 5s.  
   `--transition`: Select transition type. [none|fade|wipe|push|ripple].  
   `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
-  `--captions_file`: Specify a filename for photo captions. Captions will be in a textbox, the background of the textbox will match `--bgcolor`. Text will be black or white to best contrast the background color.  
+  `--captions_file`: Specify a filename for photo captions.  
+  &ensp;&ensp;&ensp;&ensp;- Captions will be in a textbox.
+  &ensp;&ensp;&ensp;&ensp;- The background of the textbox will match `--bgcolor`.
+  &ensp;&ensp;&ensp;&ensp;- Text will be black or white to best contrast the background color.  
 
 Presentation Output:  
   `--output_file`: Output file name. Defaults to 'Presentation.pptx'.  
@@ -60,7 +67,9 @@ Image Selection:
 
 Image Quality:  
   `--auto_adjust`: Applies an auto-levels to each photo, and a gamma adjustment to the ones that are too dark.
-  `--image_quality`: Level of JPEG compression to use when saving slides. Defaults to 75. Allowed range is 1-100. Bigger numbers mean bigger files but higher image quality.
+  `--image_quality`: Level of JPEG compression to use when saving slides. Defaults to 75. 
+  &ensp;&ensp;&ensp;&ensp;- Allowed range is 1-100.
+  &ensp;&ensp;&ensp;&ensp;- Bigger numbers mean bigger files but higher image quality.
   `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)  
   `--auto_contrast`: Execute an auto contrast action on the images when adding them to the slideshow.  
   
