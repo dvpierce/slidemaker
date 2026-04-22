@@ -51,8 +51,8 @@ Slideshow Settings:
   `--transition`: Select transition type. [none|fade|wipe|push|ripple].  
   `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
   `--captions_file`: Specify a filename for photo captions.  
-  &ensp;&ensp;&ensp;&ensp;- Captions will be in a textbox.
-  &ensp;&ensp;&ensp;&ensp;- The background of the textbox will match `--bgcolor`.
+  &ensp;&ensp;&ensp;&ensp;- Captions will be in a textbox.  
+  &ensp;&ensp;&ensp;&ensp;- The background of the textbox will match `--bgcolor`.  
   &ensp;&ensp;&ensp;&ensp;- Text will be black or white to best contrast the background color.  
 
 Presentation Output:  
