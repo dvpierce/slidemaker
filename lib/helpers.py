@@ -1,6 +1,6 @@
 import os
 import io
-from PIL import Image, ImageFilter, ImageOps
+from PIL import Image, ImageFilter, ImageOps, ImageStat
 import numpy as np
 import re
 import json
@@ -28,7 +28,7 @@ class my_logger:
                 print(self._get_time(), *args, **kwargs)
 
 class imghandler:
-    def __init__(self, img_path, slide_w=13.333, slide_h=7.5):
+    def __init__(self, img_path, slide_w=13.333, slide_h=7.5, image_quality=75, maxres=300):
         self.image = img_path
         self.filename = os.path.basename(self.image)
         self.slide_w = slide_w
@@ -36,6 +36,8 @@ class imghandler:
         self.image_data = Image.open(self.image)
         self.lim_w = None
         self.lim_h = None
+        self.image_quality = image_quality
+        self.maxres = maxres
 
     def get_imagesize(self):
         w, h = self.image_data.size
@@ -50,19 +52,19 @@ class imghandler:
             self.lim_h = h/scalefactor
         return self.lim_w, self.lim_h
 
-    def get_is_largeimage(self, maxres=300):
+    def get_is_largeimage(self):
         # Return whether or not the image is higher res than it needs
-        # to be in order to be [maxres] DPI @ get_limits() height/width.
+        # to be in order to be [self.maxres] DPI @ get_limits() height/width.
         w, h = self.image_data.size
         lim_w, lim_h = self.get_limits()
-        return w > (lim_w * maxres)
+        return w > (lim_w * self.maxres)
 
-    def resample(self, maxres=300):
+    def resample(self):
         # Resample image to [maxres] dpi if it's higher res than needed.
         if self.get_is_largeimage():
             lim_w, lim_h = self.get_limits()
-            new_w = int(lim_w * maxres)
-            new_h = int(lim_h * maxres)
+            new_w = int(lim_w * self.maxres)
+            new_h = int(lim_h * self.maxres)
             self.image_data = self.image_data.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
             return True
         else:
@@ -79,20 +81,46 @@ class imghandler:
         stretched = original.resize((int(self.slide_w*100), int(self.slide_h*100)))
         blurred_bg = stretched.filter(ImageFilter.GaussianBlur(radius=20))
         image_stream = io.BytesIO()
-        blurred_bg.save(image_stream, format='JPEG')
+        blurred_bg.save(image_stream, format='JPEG', quality=self.image_quality)
         image_stream.seek(0)
         return image_stream
 
     def get_image(self):
         image_stream = io.BytesIO()
-        self.image_data.save(image_stream, format='JPEG')
+        self.image_data.save(image_stream, format='JPEG', quality=self.image_quality)
         image_stream.seek(0)
         return image_stream
 
-    def get_autocontrast(self):
+    def auto_tone(self):
+        channels = self.image_data.split()
+        out_channels = [ImageOps.autocontrast(c) for c in channels]
+        self.image_data = Image.merge("RGB", out_channels)
+
+    def lift_shadows(self):
+        gamma = 1.5
+        lut = [pow(i / 255.0, 1.0 / gamma) * 255 for i in range(256)]
+        self.image_data = self.image_data.point(lut * len(self.image_data.getbands()))
+
+    def needs_gamma_lift(self):
+        grayscale = self.image_data.convert('L')
+        stat = ImageStat.Stat(grayscale)
+        mean = stat.mean[0]
+        median = stat.median[0]
+        hist = grayscale.histogram()
+        pixels_in_shadows = sum(hist[:64])
+        total_pixels = sum(hist)
+        shadow_density = pixels_in_shadows / total_pixels
+        is_bottom_heavy = median < (mean * 0.85)
+        is_underexposed = shadow_density > 0.40
+        return is_bottom_heavy or is_underexposed
+
+    def get_autoadjusted_image(self):
         image_stream = io.BytesIO()
+        if self.needs_gamma_lift():
+            self.lift_shadows()
+        self.auto_tone()
         mod_image = self.image_data.convert("RGB")
-        ImageOps.autocontrast(mod_image, cutoff=3).save(image_stream, format='JPEG')
+        mod_image.save(image_stream, format='JPEG', quality=self.image_quality)
         image_stream.seek(0)
         return image_stream
 

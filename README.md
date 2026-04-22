@@ -10,6 +10,8 @@ Automatically scales photos proportionately to fit the background of a slide. Fi
 
 Default slide size is PowerPoint's default of 13.333 by 7.5 inches, with a 16:9 aspect ratio. Adjust the width/height arguments to get the desired aspect ratio for your application.
 
+Images are saved in the PowerPoint presentation using JPEG compression. Set the `--image_quality` argument to 90 or more if you have lots of screenshots and line art, to avoid compression artifacts. Photographs are usually ok at the default setting of 75. You can also set that value lower to decrease resulting file size.
+
 **Examples**:
 
   * For 1920x1200 screens with a 16:10 aspect ratio, you can set --height to 8.333.
@@ -19,8 +21,6 @@ Default slide size is PowerPoint's default of 13.333 by 7.5 inches, with a 16:9 
 Generally speaking, you're almost never going to see anything but 16:9 on a computer. But some places still have the older 4:3 stuff kicking around.
 
 Also, even if you have a newer projector, you might have an older screen which is squareish. Setting the projector to a 4:3 or 5:4 aspect ratio might be preferable in that case as well, if the hardware supports the older video modes.
-
-**A Note About File Size**: Pictures are not individually all that large, although the storage a normal photo uses increases every time somebody upgrades their smartphone. But whether they're 12MB each or 2MB, it can add up fast. Especially if your grandmother was, like mine, always carrying around a camera. So keep in mind that a GB of photographs will end up being a GB of presentation, and buy big thumb drives.
 
 #### How To Use
 
@@ -55,11 +55,14 @@ python slidemaker.py --input_dir ./imgs --deduplicate --transition 2 --blurry_ba
   `--threshold`: Minimum "Hamming Distance" between two photos for duplicate detection. (Does nothing unless --deduplicate is also set, defaults to 12.)
 
   `--transition`: Which type of slide transition to use. (If not specified, uses none.)  
-  `--auto_contrast`: Applies an auto_contrast adjustment to each photo.  
+  `--auto_adjust`: Applies an auto-levels to each photo, and a gamma adjustment to the ones that are too dark.
+  `--image_quality`: Level of JPEG compression to use when saving slides. Defaults to 75. Allowed range is 1-100. Bigger numbers mean bigger files but higher image quality.
   `--resample`: Downsamples images if the effective DPI is higher than the number specified. (0 disables.)
-  `--subfolders`: Instead of looking in 'input_dir' for images, looks for subfolders of 'input_dir'. Not recursive. (Yet)
-  `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.
-  `--captions_file`: Specify a filename for photo captions.
+
+  `--subfolders`: Instead of only looking in 'input_dir' for images, looks recursively in subfolders also.  
+  `--titles`: Inserts a title slide before each folder's images, using the name of the folder as the title.  
+  `--captions_file`: Specify a filename for photo captions.  
+  `--logfile`: Use a log file instead of stdout. If you do not provide an argument, a default file name 'slidemaker.log' is used.  
 
 #### Captions File:
 
@@ -75,7 +78,17 @@ photo3.jpg: 'Also a caption for photo3.'
 
 As each image/slide is prepared, the caption file will be checked, and if the filename has a caption specified, it will be placed in the lower left of the slide.
   * The caption will obscure some of the image.  
-  * You do not have to provide captions for all of the photos. 
+  * You do not have to provide captions for all of the photos.  
+
+#### Memory Use
+
+Python normally does a pretty good job managing its own memory use, but in this case, the total amount of RAM in use can get pretty big pretty quickly.
+
+Although it slows things down a bit, I manually added garbage collection calls to more aggressively shed unneeded data. However, in the end, the application still builds the entire powerpoint presentation in memory before writing it.
+
+So, if you don't have enough RAM you may encounter issues with sets of photos exceeding your RAM amount. (Or which exceed 4GB, assuming you for some reason are using a 32-bit version of Python.)
+
+You can decrease the amount of RAM used by using the `--resample` and `--image_quality` arguments; lower resolution and lower quality images use less memory and storage space.
 
 #### Deduplicating and the Hamming Distance
 
@@ -91,6 +104,6 @@ The Hamming Distance (named after [Richard Hamming](https://en.wikipedia.org/wik
   * Small changes, like retouching to remove red-eye or a pimple, or slight cropping to remove fuzzies or background from a scanned image, will also not have much effect.
   * With enough editing, or with pictures that are just not the same, the number will be pretty large.
 
-This is great for filtering duplicates out of a large library of scanned photos. Because when your grandpa dropped that box of slides off at Walgreens in 1997, they didn't pick out the duplicates either, and now you have twelve CD-Rs with six slightly different high resolution scans of the same photo of your dad on prom night, May 1976, in a powder blue tuxedo and a mullet.
+This is great for filtering duplicates out of a large library of scanned photos. Because when your grandpa dropped that box of slides off at Walgreens in 1997, they didn't pick out the duplicates either, and now you have twelve CD-Rs with six slightly different high resolution scans of the same photo of your dad on prom night, May 1976, in a powder blue tuxedo and a mullet. Let's face it, he was cooler than you.
 
 So, for my sets of family photos, I've found that a threshold of 14 was sufficient to find basically all of the duplicates. Higher than 20, and I started getting false positives. Your mileage may vary.

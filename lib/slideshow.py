@@ -1,4 +1,6 @@
 import os
+import gc
+import sys
 from pptx import Presentation
 from pptx.util import Inches
 from pptx.dml.color import RGBColor
@@ -66,13 +68,14 @@ class slideshow:
                  slide_w=13.333,
                  slide_h=7.5,
                  transition="none",
-                 auto_contrast=False,
+                 auto_adjust=False,
                  bgcolor="ffffff",
                  slide_duration_sec=5,
                  blurbg=None,
                  deduplicate=False,
                  duplicate_threshold=12,
                  resample=0,
+                 image_quality=75,
                  logfile=None,
                  subfolders=False,
                  titles=False,
@@ -83,21 +86,25 @@ class slideshow:
         self.slide_w = slide_w
         self.slide_h = slide_h
         self.transition = transition
-        self.auto_contrast = auto_contrast
+        self.auto_adjust = auto_adjust
         self.bgcolor = bgcolor
         self.slide_duration_sec = slide_duration_sec
         self.blurbg = blurbg
         self.deduplicate = deduplicate
         self.duplicate_threshold = duplicate_threshold
-        self.resample=0
+        self.resample=resample
         self.subfolders = subfolders
         self.titles = titles
         self.captions = captions_file
+        self.image_quality = image_quality
         if self.captions:
             self.enable_captions = True
             self.captiondata = yaml.safe_load(open(self.captions, "r").read())
         self.showstopper = Lock()
         self.out_log = my_logger(file=logfile)
+
+        if not sys.maxsize > 2**32:
+            print("You are using a 32-bit version of Python: you may encounter issues with photo sets exceeding 4GB.")
         return
 
     def output(self, *args, **kwargs):
@@ -165,6 +172,7 @@ class slideshow:
         count = 0
         for img_path in image_files:
             count += 1
+            gc.collect()
             self.output(f"Creating slide {count} of {len(image_files)}...", end="\r", flush=True)
 
             # Use a blank slide layout (index 6 is usually blank)
@@ -174,7 +182,7 @@ class slideshow:
 
             # Determine desired size and position of image.
             try:
-                self.current_imagehandler = imghandler(img_path, slide_w=self.slide_w, slide_h=self.slide_h)
+                self.current_imagehandler = imghandler(img_path, slide_w=self.slide_w, slide_h=self.slide_h, image_quality=self.image_quality, maxres=self.resample)
             except:
                 # If there's an error creating the image handler, skip this image. It's probably just a bad file.
                 continue
@@ -189,13 +197,13 @@ class slideshow:
                 self.current_slide.background.fill.fore_color.rgb = RGBColor(r, g, b)
 
             if self.resample != 0:
-                if self.current_imagehandler.resample(maxres=self.resample):
-                    self.output(f"Image {i.image} resized.")
+                if self.current_imagehandler.resample():
+                    self.output(f"Image {self.current_imagehandler.filename} resized.")
                 else:
-                    self.output(f"Image {i.image} not resized - already small enough.")
+                    self.output(f"Image {self.current_imagehandler.filename} not resized - already small enough.")
 
-            if self.auto_contrast:
-                self.current_slide.shapes.add_picture(self.current_imagehandler.get_autocontrast(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
+            if self.auto_adjust:
+                self.current_slide.shapes.add_picture(self.current_imagehandler.get_autoadjusted_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
             else:
                 self.current_slide.shapes.add_picture(self.current_imagehandler.get_image(), Inches(xoffset), Inches(yoffset), width=Inches(width), height=Inches(height))
 
@@ -217,6 +225,14 @@ class slideshow:
             fragment = parse_xml(xml)
             self.current_slide.element.insert(-1, fragment)
 
+    def _find_subdirs(self):
+        abs_root = os.path.abspath(self.input_dir)
+        dir_paths = []
+
+        for root, dirs, files in os.walk(abs_root):
+            dir_paths.append(root)
+        return dir_paths
+
     def create_image_slideshow(self):
         with self.showstopper:
             if os.path.exists(self.output_file) and not self.overwrite:
@@ -227,7 +243,8 @@ class slideshow:
             self.current_presentation.slide_height = Inches(self.slide_h)
 
             if self.subfolders:
-                directories = [f"{self.input_dir}{os.sep}{fname}" for fname in os.listdir(self.input_dir) if os.path.isdir(self.input_dir + os.sep + fname)]
+                directories = self._find_subdirs()
+                print(directories)
             else:
                 directories = [self.input_dir]
 
